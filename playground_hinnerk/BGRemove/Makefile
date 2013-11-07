@@ -42,10 +42,10 @@ EQUALS = =
 CMAKE_EDIT_COMMAND = /usr/bin/ccmake
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/n8fear/Studium/WS2013-2014/SWP_Mobilkommunikation/SWP_Mobilkommunikation/playground_hinnerk/BGRemove
+CMAKE_SOURCE_DIR = /home/n8fear/Studium/WS2013-2014/SWP/SWP_Mobilkommunikation/playground_hinnerk/BGRemove
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/n8fear/Studium/WS2013-2014/SWP_Mobilkommunikation/SWP_Mobilkommunikation/playground_hinnerk/BGRemove
+CMAKE_BINARY_DIR = /home/n8fear/Studium/WS2013-2014/SWP/SWP_Mobilkommunikation/playground_hinnerk/BGRemove
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -72,9 +72,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/n8fear/Studium/WS2013-2014/SWP_Mobilkommunikation/SWP_Mobilkommunikation/playground_hinnerk/BGRemove/CMakeFiles /home/n8fear/Studium/WS2013-2014/SWP_Mobilkommunikation/SWP_Mobilkommunikation/playground_hinnerk/BGRemove/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/n8fear/Studium/WS2013-2014/SWP/SWP_Mobilkommunikation/playground_hinnerk/BGRemove/CMakeFiles /home/n8fear/Studium/WS2013-2014/SWP/SWP_Mobilkommunikation/playground_hinnerk/BGRemove/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/n8fear/Studium/WS2013-2014/SWP_Mobilkommunikation/SWP_Mobilkommunikation/playground_hinnerk/BGRemove/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/n8fear/Studium/WS2013-2014/SWP/SWP_Mobilkommunikation/playground_hinnerk/BGRemove/CMakeFiles 0
 .PHONY : all
 
 # The main clean target

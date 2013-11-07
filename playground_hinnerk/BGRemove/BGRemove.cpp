@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 #include <opencv2/opencv.hpp>
 
 using namespace std;
@@ -35,6 +36,14 @@ int main ( int argc, const char * argv[])
 		dilate(fore,fore, Mat());
 		processed = img - back;
 		findContours(fore, contours, CV_RETR_TREE,CV_CHAIN_APPROX_TC89_L1);//,CV_CHAIN_APPROX_TC89_KCOS);
+		for(std::vector<vector<Point> >::iterator it = contours.begin(); it != contours.end(); ){
+			vector<Point> temp = *it;
+			if (temp.size() < 20)
+			contours.erase(it);
+			else
+				it++;
+//			cout <<  "test\n";
+		}
 		drawContours(processed, contours, -1, cv::Scalar(0,0,255),2);
 
 		capture >> old;
