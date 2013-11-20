@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
 
 	// argument checking
 	if(argc != 2) {
-		cout << "You need to supply one argument!";
+		cout << "You need to supply one argument!" << endl;
 		return -1;
 	}
 	
@@ -47,9 +47,13 @@ int main(int argc, char* argv[]) {
 	int heigth =cap.get(CV_CAP_PROP_FRAME_HEIGHT);
 		
 	// DCT requires EVEN image dimensions, so calculate offsets
-	int width_offset, heigth_offset;
-	(width % 2 == 0) ? width_offset = 0 : width_offset = 1;
-	(heigth % 2 == 0) ? heigth_offset = 0 : heigth_offset = 1;
+	// however we use blocks of 8x8 pixel (which are even)
+	int mod, width_offset, heigth_offset;
+	int blocksize = 8;
+	( (mod=(width % 8)) == 0) ? width_offset = 0 : width_offset = 
+		blocksize-mod;
+	( (mod=(heigth % 8)) == 0) ? heigth_offset = 0 : heigth_offset =
+		blocksize-mod;
 
 	// create a window for playback and DCT
 	namedWindow("MyPlayback", CV_WINDOW_AUTOSIZE);
@@ -68,7 +72,7 @@ int main(int argc, char* argv[]) {
 		Mat gray_img;
 		cvtColor(frame, gray_img, CV_RGB2GRAY);
 		
-		// make sure both image dimensions are a multiple of 2
+		// make sure both image dimensions are multiple of 2 / blocksize 
 		Mat dim_img;
 		copyMakeBorder(gray_img, dim_img, 0, heigth_offset, 0, 
 				width_offset, IPL_BORDER_REPLICATE);
@@ -78,17 +82,32 @@ int main(int argc, char* argv[]) {
 		dim_img.convertTo(float_img, CV_64F);
 		 
 		// let's do the DCT now: image => frequencies
-		Mat dct_img;
-		dct(float_img, dct_img);
-		
+		// select eveery 8x8 bock of the image
+		Mat dct_img = float_img.clone();
+		for (int r = 0; r < dct_img.rows; r += blocksize)
+			for (int c = 0; c < dct_img.cols; c += blocksize) {
+				
+				// For each block, split into planes, do dct,
+				// and merge back into the block
+				Mat block = dct_img(Rect(c, r, 8, 8));
+				vector<Mat> planes;
+				split(block, planes);
+				vector<Mat> outplanes(planes.size());
+			
+				// note: it seems that only one plane exist, so
+				// loop might me redundant
+				for (size_t k = 0; k < planes.size(); k++) {
+					dct(planes[k], outplanes[k]);
+				}
+				merge(outplanes, block);
+			}
+	
 		// matrice contains real / complex parts, filter them seperatly
 		// see: http://stackoverflow.com/questions/8059989/ 
-		// TODO how to extract using magnitude() / phase() ?
-//		Mat dct_real_img;
-//		Mat dct_cplx_img;
-//		magnitude(dct_img, dct_real_img, dct_img);
+		// just convert back to 8 bits per pixel
+		// dct_img.convertTo(dct_img, CV_8UC1);
 
-		// show the different frames in our windows
+		// show results
 		imshow("MyPlayback", frame);
 		imshow("MyDCT", dct_img);
 		
