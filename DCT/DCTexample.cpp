@@ -43,8 +43,8 @@ int main(int argc, char* argv[]) {
 	cout << "Initiate playback and DCT of " << argv[1] << endl;
 
 	// get window size
-	int width =cap.get(CV_CAP_PROP_FRAME_WIDTH);
-	int heigth =cap.get(CV_CAP_PROP_FRAME_HEIGHT);
+	int width = cap.get(CV_CAP_PROP_FRAME_WIDTH);
+	int heigth = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
 		
 	// DCT requires EVEN image dimensions, so calculate offsets
 	// however we use blocks of 8x8 pixel (which are even)
@@ -89,7 +89,8 @@ int main(int argc, char* argv[]) {
 				
 				// For each block, split into planes, do dct,
 				// and merge back into the block
-				Mat block = dct_img(Rect(c, r, 8, 8));
+				Mat block = dct_img(Rect(c, r, blocksize,
+							blocksize));
 				vector<Mat> planes;
 				split(block, planes);
 				vector<Mat> outplanes(planes.size());
@@ -100,7 +101,22 @@ int main(int argc, char* argv[]) {
 					dct(planes[k], outplanes[k]);
 				}
 				merge(outplanes, block);
+
+				// double dc = block.at<double>(0,0);
+				// double dc2 = dct_img.at<double>(r,c);
+				// cout << dc << "	" << dc2 << endl;
+
+				// for (int i=0; i<8; ++i){
+				// 	for (int j=0; j<8; ++j) {
+
+				// 		block.at<double>(i,j) = dc;
+				// 	}
+				// }
+
+				// cout << "BLOCK " << c << "|" << r << endl 
+				//	<< block << endl << endl;
 			}
+		// break;
 	
 		// matrice contains real / complex parts, filter them seperatly
 		// see: http://stackoverflow.com/questions/8059989/ 
