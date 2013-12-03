@@ -130,11 +130,11 @@ int main(int argc, char* argv[]) {
 		// just convert back to 8 bits per pixel
 		dct_img.convertTo(dct_img, CV_8UC1);
 
+		// update histrogramm information
 		for (int r = 0; r < dct_img.rows; r += blocksize)
 		for (int c = 0; c < dct_img.cols; c += blocksize) {
 
 			histogramm[dct_img.at<uint8_t>(r,c)] += 1;
-
 			if (histogramm[dct_img.at<uint8_t>(r,c)] == 0)
 				cerr << "INTEGER OVERFLOW @HISTROGRAMM" << endl;
 		}
