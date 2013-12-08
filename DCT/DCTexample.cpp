@@ -23,9 +23,20 @@
 #include "opencv2/imgproc/imgproc_c.h"
 #include "opencv2/video/background_segm.hpp"
 
+#include "CvHMM.h"
+#include <time.h>
+
 using namespace cv;
 using namespace std;
 using namespace gpu;
+
+#define BLACK 0
+#define GRAY 133
+#define WHITE 255
+
+#define OBS1 0
+#define OBS2 1
+#define OBS3 2
 
 int main(int argc, char* argv[]) {
 
@@ -62,6 +73,28 @@ int main(int argc, char* argv[]) {
 		
 	// histogramm of used gray values
 	unsigned long long int histogramm [256] = {0};
+
+	// CvHMM training sequences variables and GUESS data
+	int obs_max = 25;			// 25 frames
+	int seq_max = 20;			// 20 secs
+	int block_r = 33 * blocksize;		// 264
+	int block_c = 61 * blocksize;		// 488
+	int seq_num, obs_num = 0;
+	int max_iter = 100;
+	
+	CvHMM hmm;
+	cv::Mat train_seq = Mat(seq_max, obs_max, CV_32S);
+
+	double TRGUESSdata[] = { 0.95 , 0.05,	// background
+				 0.8 , 0.2 };	// foreground
+	cv::Mat TRGUESS = cv::Mat(2,2, CV_64F, TRGUESSdata);
+	
+	double EMITGUESSdata[] = { 0.85 , 0.1 , 0.05 ,
+				   0.7 , 0.15 , 0.15 };
+	cv::Mat EMITGUESS = cv::Mat(2,3, CV_64F, EMITGUESSdata);
+	
+	double INITGUESSdata[] = { 0.95 , 0.05 };
+	cv::Mat INITGUESS = cv::Mat(1,2, CV_64F, INITGUESSdata);
 
 	while(1) { 
 		// read new frame from video, stop playback on failure
@@ -110,16 +143,16 @@ int main(int argc, char* argv[]) {
 			double dc = block.at<double>(0,0)/8;
 
 			// set one value for all pixels in block
-			for (int i=0; i<8; ++i){
-			 	for (int j=0; j<8; ++j) {
+			for (int i=0; i<blocksize; ++i){
+			 	for (int j=0; j<blocksize; ++j) {
 
-					if (dc > 0 && dc < 90) { //bg
-			 			block.at<double>(i,j) = 0;
+					if (dc < 90) { //bg
+			 			block.at<double>(i,j) = BLACK;
 					} 
-					else if (dc > 200 && dc < 255) { //human
-			 			block.at<double>(i,j) = 255;
+					else if (dc > 200) { //human
+			 			block.at<double>(i,j) = WHITE;
 					} else {
-			 			block.at<double>(i,j) = 130;
+			 			block.at<double>(i,j) = GRAY;
 					}
 			 	}
 			 }
@@ -139,6 +172,46 @@ int main(int argc, char* argv[]) {
 				cerr << "INTEGER OVERFLOW @HISTROGRAMM" << endl;
 		}
 
+		// set current observation value for blocks histrogramm value
+		if (dct_img.at<uint8_t>(block_r, block_c) == BLACK)
+			train_seq.at<int>(seq_num, obs_num) = OBS1;
+		else if (dct_img.at<uint8_t>(block_r, block_c) == GRAY)
+			train_seq.at<int>(seq_num, obs_num) = OBS2;
+		else if (dct_img.at<uint8_t>(block_r, block_c) == WHITE)
+			train_seq.at<int>(seq_num, obs_num) = OBS3;
+		else
+			break;
+		
+		// increment HMM counters ...
+		obs_num++;
+		if (obs_num == obs_max){
+	
+			// start new observation sequence
+			obs_num = 0;
+			seq_num++;
+
+			// ... and start training if enough information
+			if (seq_num == seq_max){
+
+				cout << "Starting Baum-Welch-Training with:" 
+					<< endl << endl << train_seq << endl;
+				hmm.printModel(TRGUESS, EMITGUESS, INITGUESS);
+				hmm.train(train_seq, max_iter, 
+						TRGUESS, EMITGUESS, INITGUESS);
+				cout << endl << "====== Result =======" << endl;
+				hmm.printModel(TRGUESS, EMITGUESS, INITGUESS);
+				break;
+			}
+		}
+
+		// mark the block which is used for training
+		for (int i=0; i<blocksize; ++i){
+			for (int j=0; j<blocksize; ++j) {
+				dct_img.at<uint8_t>(block_r+i, block_c+j) =
+					WHITE;
+			}
+		}
+		
 		// show results
 		imshow("MyPlayback", frame);
 		imshow("MyDCT", dct_img);
