@@ -1,6 +1,6 @@
 /*
  *      C++ Main Header of Hidden Markov Model for OpenCV (CvHMM).
- *		
+ *
  * Copyright (c) 2012 Omid B. Sakhi
  * All rights reserved.
  *
@@ -51,17 +51,17 @@ public:
 	}
 	/* Generates a sequence of states and emissions from a Markov model */
 	static void generate(const int &_N,const cv::Mat &_TRANS,const cv::Mat &_EMIS, const cv::Mat &_INIT, cv::Mat &seq, cv::Mat &states)
-	{			
+	{
 		seq = cv::Mat(1,_N,CV_32S);
 		states = cv::Mat(1,_N,CV_32S);
 		int n_states = _TRANS.rows;
-		cv::Mat cumulative_emis(_EMIS.size(),CV_64F); 
+		cv::Mat cumulative_emis(_EMIS.size(),CV_64F);
 		for (int r=0;r<cumulative_emis.rows;r++)
 			cumulative_emis.at<double>(r,0) = _EMIS.at<double>(r,0);
 		for (int r=0;r<cumulative_emis.rows;r++)
 			for (int c=1;c<cumulative_emis.cols;c++)
 				cumulative_emis.at<double>(r,c) = cumulative_emis.at<double>(r,c-1) + _EMIS.at<double>(r,c);
-		cv::Mat cumulative_trans(_TRANS.size(),CV_64F); 
+		cv::Mat cumulative_trans(_TRANS.size(),CV_64F);
 		for (int r=0;r<cumulative_trans.rows;r++)
 			cumulative_trans.at<double>(r,0) = _TRANS.at<double>(r,0);
 		for (int r=0;r<cumulative_trans.rows;r++)
@@ -79,24 +79,24 @@ public:
 			{
 				last_state = c;
 				break;
-			}		
+			}
 		for (int t=0;t<_N;t++)
 		{
-			r_trans = (double)rand()/RAND_MAX;			
-			for (int i=0;i<cumulative_trans.cols;i++)			
+			r_trans = (double)rand()/RAND_MAX;
+			for (int i=0;i<cumulative_trans.cols;i++)
 				if (r_trans <= cumulative_trans.at<double>(last_state,i))
 				{
 					states.at<int>(0,t) = i;
 					break;
 				}
-			r_emis = (double)rand()/RAND_MAX;			
+			r_emis = (double)rand()/RAND_MAX;
 			for (int i=0;i<cumulative_emis.cols;i++)
 			{
 				if (r_emis <= cumulative_emis.at<double>(states.at<int>(0,t),i))
 				{
 					seq.at<int>(0,t) = i;
 					break;
-				}			
+				}
 			}
 			last_state = states.at<int>(0,t);
 		}
@@ -111,8 +111,8 @@ public:
 		cv::Mat INIT = _INIT.clone();
 		correctModel(TRANS,EMIS,INIT);
 		int nseq = seq.cols;
-		int nstates = TRANS.cols;		
-		int nobs = EMIS.cols;		
+		int nstates = TRANS.cols;
+		int nobs = EMIS.cols;
 		cv::Mat v(nstates,nseq,CV_64F);
         cv::Mat path(nstates,nseq,CV_32S); path = 0.0f;
         cv::Mat newpath(nstates,nseq,CV_32S); newpath = 0.0f;
@@ -124,21 +124,21 @@ public:
 		double maxp,p;
 		int state;
 		for (int t=1;t<nseq;t++)
-		{			
+		{
 			for (int y=0;y<nstates;y++)
 			{
 				maxp = -DBL_MAX;
 				state = y;
 				for (int y0=0;y0<nstates;y0++)
-				{					
-					p = v.at<double>(y0,t-1) + log(TRANS.at<double>(y0,y)) + log(EMIS.at<double>(y,seq.at<int>(0,t)));			
+				{
+					p = v.at<double>(y0,t-1) + log(TRANS.at<double>(y0,y)) + log(EMIS.at<double>(y,seq.at<int>(0,t)));
 					if (maxp<p)
-					{						
+					{
 						maxp = p;
 						state = y0;
 					}
-				}			
-				v.at<double>(y,t) = maxp;				
+				}
+				v.at<double>(y,t) = maxp;
 				for (int t1=0;t1<t;t1++)
 					newpath.at<int>(y,t1) = path.at<int>(state,t1);
 				newpath.at<int>(y,t) = y;
@@ -146,15 +146,15 @@ public:
 			path.release();
 			path = newpath.clone();
 		}
-		maxp = -DBL_MAX;		
+		maxp = -DBL_MAX;
 		for (int y=0;y<nstates;y++)
-		{						
+		{
 			if (maxp < v.at<double>(y,nseq-1))
 			{
 				maxp = v.at<double>(y,nseq-1);
 				state = y;
 			}
-		}		
+		}
 		states = path.row(state).clone();
 	}
 
@@ -170,14 +170,14 @@ public:
 		int T = seq.cols; // number of element per sequence
 		int C = seq.rows; // number of sequences
 		int N = TRANS.rows; // number of states | also N = TRANS.cols | TRANS = A = {a_{i,j}} - NxN
-		int M = EMIS.cols; // number of observations | EMIS = B = {b_{j}(k)} - NxM				
-		// compute a_{0}	
+		int M = EMIS.cols; // number of observations | EMIS = B = {b_{j}(k)} - NxM
+		// compute a_{0}
 		FORWARD = cv::Mat(N,T,CV_64F);
 		cv::Mat c(1,T,CV_64F); c.at<double>(0,0) = 0;
 		for (int i=0;i<N;i++)
 		{
 			FORWARD.at<double>(i,0) = INIT.at<double>(0,i)*EMIS.at<double>(i,seq.at<int>(0,0));
-			c.at<double>(0,0) += FORWARD.at<double>(i,0); 
+			c.at<double>(0,0) += FORWARD.at<double>(i,0);
 		}
 		// scale the a_{0}(i)
 		c.at<double>(0,0) = 1/c.at<double>(0,0);
@@ -191,7 +191,7 @@ public:
 			for (int i=0;i<N;i++)
 			{
 				FORWARD.at<double>(i,t) = 0;
-				for (int j=0;j<N;j++)				
+				for (int j=0;j<N;j++)
 					FORWARD.at<double>(i,t) += FORWARD.at<double>(i,t-1)*TRANS.at<double>(j,i);
 				FORWARD.at<double>(i,t) = FORWARD.at<double>(i,t) * EMIS.at<double>(i,seq.at<int>(0,t));
 				c.at<double>(0,t)+=FORWARD.at<double>(i,t);
@@ -216,12 +216,12 @@ public:
 				// scale B_{t}(i) with same scale factor as a_{t}(i)
 				BACKWARD.at<double>(i,t) *= c.at<double>(0,t);
 			}
-		// 4. 
+		// 4.
 		// Compute Y_{t}(i,j) : The probability of being in state i at time t and transiting to state j at time t+1
-		// Compute Y_{t}(i) 
+		// Compute Y_{t}(i)
 		double denom;
-		int index;		
-		
+		int index;
+
 		PSTATES = cv::Mat(N,T,CV_64F);
 		cv::Mat YNN(N*N,T,CV_64F);
 		for (int t=0;t<T-1;t++)
@@ -248,7 +248,7 @@ public:
 			logpseq += log(c.at<double>(0,i));
 		logpseq *= -1;
 	}
-	
+
 	static void getUniformModel(const int &n_states,const int &n_observations, cv::Mat &TRANS,cv::Mat &EMIS,cv::Mat &INIT)
 	{
 		TRANS = cv::Mat(n_states,n_states,CV_64F);
@@ -264,11 +264,11 @@ public:
 	{
 		/* A Revealing Introduction to Hidden Markov Models, Mark Stamp */
 		// 1. Initialization
-		int iters = 0;				
+		int iters = 0;
 		int T = seq.cols; // number of element per sequence
 		int C = seq.rows; // number of sequences
 		int N = TRANS.rows; // number of states | also N = TRANS.cols | TRANS = A = {aij} - NxN
-		int M = EMIS.cols; // number of observations | EMIS = B = {bj(k)} - NxM		
+		int M = EMIS.cols; // number of observations | EMIS = B = {bj(k)} - NxM
 		correctModel(TRANS,EMIS,INIT);
 		cv::Mat FTRANS,FINIT,FEMIS;
 		if (UseUniformPrior)
@@ -279,13 +279,13 @@ public:
 			FEMIS = EMIS.clone();
 			FINIT = INIT.clone();
 		}
-		// compute a0		
+		// compute a0
 		cv::Mat a(N,T,CV_64F);
 		cv::Mat c(1,T,CV_64F); c.at<double>(0,0) = 0;
 		for (int i=0;i<N;i++)
 		{
 			a.at<double>(i,0) = INIT.at<double>(0,i)*EMIS.at<double>(i,seq.at<int>(0,0));
-			c.at<double>(0,0) += a.at<double>(i,0); 
+			c.at<double>(0,0) += a.at<double>(i,0);
 		}
 		// scale the a0(i)
 		c.at<double>(0,0) = 1/c.at<double>(0,0);
@@ -304,7 +304,7 @@ public:
 				for (int i=0;i<N;i++)
 				{
 					a.at<double>(i,t) = 0;
-					for (int j=0;j<N;j++)				
+					for (int j=0;j<N;j++)
 						a.at<double>(i,t) += a.at<double>(i,t-1)*TRANS.at<double>(j,i);
 					a.at<double>(i,t) = a.at<double>(i,t) * EMIS.at<double>(i,seq.at<int>(data,t));
 					c.at<double>(0,t)+=a.at<double>(i,t);
@@ -353,7 +353,7 @@ public:
 				}
 			}
 			// 5. Re-estimate A,B and pi
-			// re-estimate pi		
+			// re-estimate pi
 			for (int i=0;i<N;i++)
 				INIT.at<double>(0,i) = YN.at<double>(i,0);
 			// re-estimate A
@@ -377,10 +377,10 @@ public:
 				for (int j=0;j<M;j++)
 				{
 					numer = 0;
-					denom = 0; 
+					denom = 0;
 					for (int t=0;t<T-1;t++)
 					{
-						if (seq.at<int>(data,t)==j) 
+						if (seq.at<int>(data,t)==j)
 							numer+=YN.at<double>(i,t);
 						denom += YN.at<double>(i,t);
 					}
@@ -446,11 +446,11 @@ public:
 			INIT.at<double>(0,j)/=sum;
 	}
 	static void printPaths(const cv::Mat &PATHS,const cv::Mat &P, const int &t)
-	{		
+	{
 		for (int r=0;r<PATHS.rows;r++)
-		{			
+		{
 			for (int c=0;c<=t;c++)
-				std::cout << PATHS.at<int>(r,c);			
+				std::cout << PATHS.at<int>(r,c);
 			std::cout << " - " << P.at<double>(r,t) << "\n";
 		}
 	}
