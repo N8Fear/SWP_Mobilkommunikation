@@ -481,4 +481,4 @@ public:
 	}
 };
 
-#endif CVHMM_H
+#endif // CVHMM_H
