@@ -48,7 +48,6 @@ int main(int argc, char* argv[]) {
 			cout << "Play whole file..." << endl;
 			break;
 		case 3:
-			cout << "Skip " << skip << "seconds..." << endl;
 			skip = (long)atoi(argv[2]);
 			cout << "Skip " << skip << "seconds..." << endl;
 			break;
