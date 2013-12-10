@@ -91,10 +91,8 @@ int main(int argc, char* argv[]) {
 	int block_r = 33 * blocksize;		// 264
 	int block_c = 61 * blocksize;		// 488
 	int seq_num, obs_num = 0;
-	int max_iter = 100;
-
 	int max_iter = 2147483647;
-	
+
 	CvHMM hmm;
 	cv::Mat train_seq = Mat(seq_max, obs_max, CV_32S);
 
