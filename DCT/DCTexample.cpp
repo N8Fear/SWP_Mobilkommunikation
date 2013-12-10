@@ -45,11 +45,11 @@ int main(int argc, char* argv[]) {
 		cerr << "You need to supply one argument!" << endl;
 		return -1;
 	}
-	
+
 	// open the video file for reading
-	VideoCapture cap(argv[1]); 
+	VideoCapture cap(argv[1]);
 	if (!cap.isOpened()) {
-	
+
 		cerr << "Cannot open the video file" << endl;
 		return -1;
 	}
@@ -57,12 +57,12 @@ int main(int argc, char* argv[]) {
 	// get window size
 	int width = cap.get(CV_CAP_PROP_FRAME_WIDTH);
 	int heigth = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
-		
+
 	// DCT requires EVEN image dimensions, so calculate offsets
 	// however we use blocks of 8x8 pixel (which are even)
 	int mod, width_offset, heigth_offset;
 	int blocksize = 8;
-	( (mod=(width % 8)) == 0) ? width_offset = 0 : width_offset = 
+	( (mod=(width % 8)) == 0) ? width_offset = 0 : width_offset =
 		blocksize-mod;
 	( (mod=(heigth % 8)) == 0) ? heigth_offset = 0 : heigth_offset =
 		blocksize-mod;
@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
 	// create a window for playback and DCT
 	namedWindow("MyPlayback", CV_WINDOW_AUTOSIZE);
 	namedWindow("MyDCT", CV_WINDOW_AUTOSIZE);
-		
+
 	// histogramm of used gray values
 	unsigned long long int histogramm [256] = {0};
 
@@ -81,25 +81,25 @@ int main(int argc, char* argv[]) {
 	int block_c = 61 * blocksize;		// 488
 	int seq_num, obs_num = 0;
 	int max_iter = 100;
-	
+
 	CvHMM hmm;
 	cv::Mat train_seq = Mat(seq_max, obs_max, CV_32S);
 
 	double TRGUESSdata[] = { 0.95 , 0.05,	// background
 				 0.8 , 0.2 };	// foreground
 	cv::Mat TRGUESS = cv::Mat(2,2, CV_64F, TRGUESSdata);
-	
+
 	double EMITGUESSdata[] = { 0.85 , 0.1 , 0.05 ,
 				   0.7 , 0.15 , 0.15 };
 	cv::Mat EMITGUESS = cv::Mat(2,3, CV_64F, EMITGUESSdata);
-	
+
 	double INITGUESSdata[] = { 0.95 , 0.05 };
 	cv::Mat INITGUESS = cv::Mat(1,2, CV_64F, INITGUESSdata);
 
-	while(1) { 
+	while(1) {
 		// read new frame from video, stop playback on failure
 		Mat frame;
-		if (!cap.read(frame)) { 
+		if (!cap.read(frame)) {
 			cerr << "Cannot read the frame from video file" << endl;
 			break;
 		}
@@ -108,30 +108,30 @@ int main(int argc, char* argv[]) {
 		// should not influence img data or quality on IR material
 		Mat gray_img;
 		cvtColor(frame, gray_img, CV_RGB2GRAY);
-		
-		// make sure both image dimensions are multiple of 2 / blocksize 
+
+		// make sure both image dimensions are multiple of 2 / blocksize
 		Mat dim_img;
-		copyMakeBorder(gray_img, dim_img, 0, heigth_offset, 0, 
+		copyMakeBorder(gray_img, dim_img, 0, heigth_offset, 0,
 				width_offset, IPL_BORDER_REPLICATE);
-		 
+
 		// grayscale image is 8bits per pixel, but dct() requires float
 		Mat float_img = Mat(dim_img.rows, dim_img.cols, CV_64F);
 		dim_img.convertTo(float_img, CV_64F);
-		
+
 		// let's do the DCT now: image => frequencies
 		// select eveery 8x8 bock of the image
 		Mat dct_img = float_img.clone();
 
 		for (int r = 0; r < dct_img.rows; r += blocksize)
 		for (int c = 0; c < dct_img.cols; c += blocksize) {
-				
+
 			// For each block, split into planes, do dct,
 			// and merge back into the block
 			Mat block = dct_img(Rect(c, r, blocksize, blocksize));
 			vector<Mat> planes;
 			split(block, planes);
 			vector<Mat> outplanes(planes.size());
-		
+
 			// note: it seems that only one plane exist, so
 			// loop might me redundant
 			for (size_t k = 0; k < planes.size(); k++) {
@@ -144,22 +144,22 @@ int main(int argc, char* argv[]) {
 
 			// set one value for all pixels in block
 			for (int i=0; i<blocksize; ++i){
-			 	for (int j=0; j<blocksize; ++j) {
+				for (int j=0; j<blocksize; ++j) {
 
 					if (dc < 90) { //bg
-			 			block.at<double>(i,j) = BLACK;
-					} 
-					else if (dc > 200) { //human
-			 			block.at<double>(i,j) = WHITE;
-					} else {
-			 			block.at<double>(i,j) = GRAY;
+						block.at<double>(i,j) = BLACK;
 					}
-			 	}
+					else if (dc > 200) { //human
+						block.at<double>(i,j) = WHITE;
+					} else {
+						block.at<double>(i,j) = GRAY;
+					}
+				}
 			 }
 		}
 
 		// matrice contains real / complex parts, filter them seperatly
-		// see: http://stackoverflow.com/questions/8059989/ 
+		// see: http://stackoverflow.com/questions/8059989/
 		// just convert back to 8 bits per pixel
 		dct_img.convertTo(dct_img, CV_8UC1);
 
@@ -181,11 +181,11 @@ int main(int argc, char* argv[]) {
 			train_seq.at<int>(seq_num, obs_num) = OBS3;
 		else
 			break;
-		
+
 		// increment HMM counters ...
 		obs_num++;
 		if (obs_num == obs_max){
-	
+
 			// start new observation sequence
 			obs_num = 0;
 			seq_num++;
@@ -193,10 +193,10 @@ int main(int argc, char* argv[]) {
 			// ... and start training if enough information
 			if (seq_num == seq_max){
 
-				cout << "Starting Baum-Welch-Training with:" 
+				cout << "Starting Baum-Welch-Training with:"
 					<< endl << endl << train_seq << endl;
 				hmm.printModel(TRGUESS, EMITGUESS, INITGUESS);
-				hmm.train(train_seq, max_iter, 
+				hmm.train(train_seq, max_iter,
 						TRGUESS, EMITGUESS, INITGUESS);
 				cout << endl << "====== Result =======" << endl;
 				hmm.printModel(TRGUESS, EMITGUESS, INITGUESS);
@@ -211,7 +211,7 @@ int main(int argc, char* argv[]) {
 					WHITE;
 			}
 		}
-		
+
 		// show results
 		imshow("MyPlayback", frame);
 		imshow("MyDCT", dct_img);
