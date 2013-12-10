@@ -40,10 +40,20 @@ using namespace gpu;
 
 int main(int argc, char* argv[]) {
 
+	long skip = 0;
 	// argument checking
-	if(argc != 2) {
-		cerr << "You need to supply one argument!" << endl;
-		return -1;
+	switch (argc){
+		case 2:
+			cout << "Play whole file..." << endl;
+			break;
+		case 3:
+			cout << "Skip " << skip << "seconds..." << endl;
+			skip = (long)atoi(argv[2]);
+			cout << "Skip " << skip << "seconds..." << endl;
+			break;
+		default:
+		cout << "Syntax: "<< argv[0] <<" <filename> [<skipped seconds from start of video>]" << endl;
+		exit(-5);
 	}
 
 	// open the video file for reading
@@ -99,6 +109,12 @@ int main(int argc, char* argv[]) {
 	while(1) {
 		// read new frame from video, stop playback on failure
 		Mat frame;
+		if (skip > 0){
+			short fps = cap.get(CV_CAP_PROP_FPS);
+			for (int i = 0; i< skip*fps;i++)
+				cap.read(frame);
+			skip=0;
+		}
 		if (!cap.read(frame)) {
 			cerr << "Cannot read the frame from video file" << endl;
 			break;
