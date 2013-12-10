@@ -49,10 +49,12 @@ int main(int argc, char* argv[]) {
 			break;
 		case 3:
 			skip = (long)atoi(argv[2]);
-			cout << "Skip " << skip << "seconds..." << endl;
+			cout << "Skip " << skip << " seconds..." << endl;
 			break;
 		default:
-		cout << "Syntax: "<< argv[0] <<" <filename> [<skipped seconds from start of video>]" << endl;
+		cout << "Syntax: " << argv[0]
+			<< " <filename> [<skipped seconds from start of video>]"
+			<< endl;
 		exit(-5);
 	}
 
@@ -89,7 +91,8 @@ int main(int argc, char* argv[]) {
 	int seq_max = 20;			// 20 secs
 	int block_r = 33 * blocksize;		// 264
 	int block_c = 61 * blocksize;		// 488
-	int seq_num, obs_num = 0;
+	int seq_num = 0;
+	int obs_num = 0;
 	int max_iter = 2147483647;
 
 	CvHMM hmm;
