@@ -1,5 +1,6 @@
-// Execute with one argument:
-// 	* Path of the input video (a String)
+// Execute with one or two arguments:
+//	* Path of the input video (a String)
+//	* Optional: seconds skipped from the start of the video
 
 
 #include <stdio.h>
@@ -92,6 +93,8 @@ int main(int argc, char* argv[]) {
 	int seq_num, obs_num = 0;
 	int max_iter = 100;
 
+	int max_iter = 2147483647;
+	
 	CvHMM hmm;
 	cv::Mat train_seq = Mat(seq_max, obs_max, CV_32S);
 
