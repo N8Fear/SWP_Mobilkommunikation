@@ -215,8 +215,10 @@ int main(int argc, char* argv[]) {
 				cout << "Starting Baum-Welch-Training with:"
 					<< endl << endl << train_seq << endl;
 				hmm.printModel(TRGUESS, EMITGUESS, INITGUESS);
-				hmm.train(train_seq, max_iter,
+				for (int k=0; k<1000; k++){
+					hmm.train(train_seq, max_iter,
 						TRGUESS, EMITGUESS, INITGUESS);
+				}
 				cout << endl << "====== Result =======" << endl;
 				hmm.printModel(TRGUESS, EMITGUESS, INITGUESS);
 				break;
