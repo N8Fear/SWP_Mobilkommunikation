@@ -1,6 +1,6 @@
 #pragma once
 
-
+/*TODO: Check necissity of included headers*/
 
 #include <stdio.h>
 #include <iostream>
@@ -35,4 +35,7 @@
 #define OBS2 1
 #define OBS3 2
 
+#define BLOCKSIZE 8
+
+/* not necessary anymore: */
 int legacy(int argc, char* argv[]) ;

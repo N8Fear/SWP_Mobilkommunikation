@@ -6,7 +6,6 @@
 #include <opencv2/opencv.hpp>
 #include "opencv2/highgui/highgui.hpp"
 
-#define BLOCKSIZE 8
 
 using namespace cv;
 using namespace std;
@@ -100,23 +99,19 @@ int SPTrack::init_dct()
 }
 Mat SPTrack::exec_dct(Mat input)
 {
+	Mat dct_img;
 	// create gray snapshot of the current frame (RGB -> GRAY)
 	// should not influence img data or quality on IR material
-	Mat gray_img;
-	cvtColor(input, gray_img, CV_RGB2GRAY);
+	cvtColor(input, dct_img, CV_RGB2GRAY);
 
 	// make sure both image dimensions are multiple of 2 / BLOCKSIZE
-	Mat dim_img;
-	copyMakeBorder(gray_img, dim_img, 0, height_offset, 0,
-			width_offset, IPL_BORDER_REPLICATE);
+	copyMakeBorder(dct_img,dct_img,0,height_offset,0,width_offset,IPL_BORDER_REPLICATE);
 
 	// grayscale image is 8bits per pixel, but dct() requires float
-	Mat float_img = Mat(dim_img.rows, dim_img.cols, CV_64F);
-	dim_img.convertTo(float_img, CV_64F);
+	dct_img.convertTo(dct_img, CV_64F);
 
 	// let's do the DCT now: image => frequencies
 	// select eveery 8x8 bock of the image
-	Mat dct_img = float_img.clone();
 
 	for (int r = 0; r < dct_img.rows; r += BLOCKSIZE)
 		for (int c = 0; c < dct_img.cols; c += BLOCKSIZE) {
