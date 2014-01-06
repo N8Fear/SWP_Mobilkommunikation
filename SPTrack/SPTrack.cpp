@@ -1,4 +1,4 @@
-//#include "SPTrack.h"
+#include "SPTrack.h"
 #include <stdio.h>
 #include <iostream>
 #include <vector>
@@ -136,22 +136,22 @@ Mat SPTrack::exec_dct(Mat input)
 			merge(outplanes, block);
 
 			// division by 8 ensures uint_8 range of DC
-//			double dc = block.at<double>(0,0)/8;
+			double dc = block.at<double>(0,0)/8;
 
 			// set one value for all pixels in block
-//			for (int i=0; i<BLOCKSIZE; ++i){
-//				for (int j=0; j<BLOCKSIZE; ++j) {
-//
-//					if (dc < 90) { //bg
-//						block.at<double>(i,j) = BLACK;
-//					}
-//					else if (dc > 200) { //human
-//						block.at<double>(i,j) = WHITE;
-//					} else {
-//						block.at<double>(i,j) = GRAY;
-//					}
-//				}
-//			 }
+		for (int i=0; i<BLOCKSIZE; ++i){
+				for (int j=0; j<BLOCKSIZE; ++j) {
+
+					if (dc < 90) { //bg
+						block.at<double>(i,j) = BLACK;
+					}
+					else if (dc > 200) { //human
+						block.at<double>(i,j) = WHITE;
+					} else {
+						block.at<double>(i,j) = GRAY;
+					}
+				}
+			 }
 		}
 
 	// matrice contains real / complex parts, filter them seperatly
