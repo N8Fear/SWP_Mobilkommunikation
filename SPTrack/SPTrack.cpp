@@ -20,6 +20,8 @@ class SPTrack{
 		int parse_cl_param(int argc, char *argv[]);
 		int init_dct();
 		Mat exec_dct(Mat);
+		long long int histogram[256];
+		void gen_histogram(Mat);
 		VideoCapture cap;
 
 	public:
@@ -37,9 +39,10 @@ int SPTrack::init_player(char *path)
 	}
 	namedWindow("Player", CV_WINDOW_AUTOSIZE&CV_GUI_NORMAL);
 
-	/* Initialization of sub processes: */
+	/* Initialization of sub processes and stuff: */
 
 	init_dct();
+	memset(histogram, 0, 256);
 	return 0;
 }
 
@@ -59,9 +62,13 @@ int SPTrack::play_stream()
 			break;
 		}
 		frame =	exec_dct(frame);
+		gen_histogram(frame);
 		imshow("Player", frame);
-		if(waitKey(30) == 27)
+		if(waitKey(30) == 27) {
+			for (int i=0; i<256; i++)
+				printf("%d;%llu;\n",i,histogram[i]);
 			break;
+		}
 	}
 	return 0;
 }
@@ -152,6 +159,16 @@ Mat SPTrack::exec_dct(Mat input)
 	// just convert back to 8 bits per pixel
 	dct_img.convertTo(dct_img, CV_8UC1);
 	return dct_img;
+}
+
+void SPTrack::gen_histogram(Mat input){
+	// update histrogramm information
+	for (int r = 0; r < input.rows; r += BLOCKSIZE)
+		for (int c = 0; c < input.cols; c += BLOCKSIZE) {
+			SPTrack::histogram[input.at<uint8_t>(r,c)] += 1;
+			if (SPTrack::histogram[input.at<uint8_t>(r,c)] == 0)
+				cerr << "INTEGER OVERFLOW @HISTROGRAMM" << endl;
+		}
 }
 
 SPTrack::SPTrack(int argc, char *argv[])
