@@ -45,11 +45,11 @@ int main(int argc, char* argv[]) {
 	// argument checking
 	switch (argc){
 		case 2:
-			cout << "Play whole file..." << endl;
+			//cout << "Play whole file..." << endl;
 			break;
 		case 3:
 			skip = (long)atoi(argv[2]);
-			cout << "Skip " << skip << " seconds..." << endl;
+			//cout << "Skip " << skip << " seconds..." << endl;
 			break;
 		default:
 		cout << "Syntax: " << argv[0]
@@ -109,6 +109,9 @@ int main(int argc, char* argv[]) {
 	double INITGUESSdata[] = { 0.95 , 0.05 };
 	cv::Mat INITGUESS = cv::Mat(1,2, CV_64F, INITGUESSdata);
 
+	unsigned long long int frame_counter = 0;
+
+
 	while(1) {
 		// read new frame from video, stop playback on failure
 		Mat frame;
@@ -160,7 +163,7 @@ int main(int argc, char* argv[]) {
 
 			// division by 8 ensures uint_8 range of DC
 			double dc = block.at<double>(0,0)/8;
-
+			/*
 			// set one value for all pixels in block
 			for (int i=0; i<blocksize; ++i){
 				for (int j=0; j<blocksize; ++j) {
@@ -175,7 +178,24 @@ int main(int argc, char* argv[]) {
 					}
 				}
 			 }
+			 */
 		}
+
+		// update standard deviation
+		double standard_deviation = 0;
+		for (int r = block_r; r < block_r+blocksize; r++)
+		for (int c = block_c; c < block_c+blocksize; c++) {
+
+			if (!((r==block_r)&&(c==block_c))){ //EXCLUDE DC
+				
+				standard_deviation +=
+				pow(dct_img.at<double>(r,c), 2);
+			}
+		}
+		standard_deviation = sqrt (standard_deviation/63);
+		frame_counter++;
+		cout << frame_counter << ";" << standard_deviation << ";" <<
+			endl;
 
 		// matrice contains real / complex parts, filter them seperatly
 		// see: http://stackoverflow.com/questions/8059989/
@@ -191,6 +211,7 @@ int main(int argc, char* argv[]) {
 				cerr << "INTEGER OVERFLOW @HISTROGRAMM" << endl;
 		}
 
+		/*
 		// set current observation value for blocks histrogramm value
 		if (dct_img.at<uint8_t>(block_r, block_c) == BLACK)
 			train_seq.at<int>(seq_num, obs_num) = OBS1;
@@ -200,7 +221,7 @@ int main(int argc, char* argv[]) {
 			train_seq.at<int>(seq_num, obs_num) = OBS3;
 		else
 			break;
-
+		
 		// increment HMM counters ...
 		obs_num++;
 		if (obs_num == obs_max){
@@ -224,6 +245,7 @@ int main(int argc, char* argv[]) {
 				break;
 			}
 		}
+		*/
 
 		// mark the block which is used for training
 		for (int i=0; i<blocksize; ++i){
@@ -240,7 +262,7 @@ int main(int argc, char* argv[]) {
 		// wait for 'esc' key press for 30 ms -- exit on 'esc' key
 		if(waitKey(30) == 27) {
 			for (int i=0; i<256; i++){
-				printf("%d;%llu;\n", i, histogramm[i]);
+				// printf("%d;%llu;\n", i, histogramm[i]);
 			}
 			break;
 		}
