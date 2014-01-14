@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
 	// create a window for playback and DCT
 	namedWindow("MyPlayback", CV_WINDOW_AUTOSIZE);
 	namedWindow("DC-AC", CV_WINDOW_AUTOSIZE);
-	namedWindow("DC-AC2", CV_WINDOW_AUTOSIZE);
+	namedWindow("MyContours", CV_WINDOW_AUTOSIZE);
 	
 	int frame_counter = 0;
 
@@ -214,10 +214,14 @@ int main(int argc, char* argv[]) {
 //			}
 		}
 
+		// check for edges
+		cv::Mat contours;
+		cv::Canny(frame, contours, 30, 90);	
+
 		// show results
 		imshow("MyPlayback", frame);
 		imshow("DC-AC", output_img);
-		imshow("DC-AC2", output_img2);
+		imshow("MyContours", contours);
 
 		// wait for 'esc' key press for 30 ms -- exit on 'esc' key
 		if(waitKey(30) == 27) {
