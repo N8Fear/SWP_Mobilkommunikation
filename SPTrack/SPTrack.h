@@ -37,5 +37,26 @@
 
 #define BLOCKSIZE 8
 
+class sp_hmm {
+	public:
+		int hmm_init();
+		int hmm_learn(cv::Mat);
+		int hmm_print();
+		sp_hmm();
+	private:
+		int obs_max;
+		int seq_max;
+		int block_r;
+		int block_c;
+		int seq_num;
+		int obs_num;
+		int max_iter;
+		CvHMM hmm;
+		cv::Mat train_seq;
+		cv::Mat TRGUESS;
+		cv::Mat EMITGUESS;
+		cv::Mat INITGUESS;
+};
+
 /* not necessary anymore: */
 int legacy(int argc, char* argv[]) ;
