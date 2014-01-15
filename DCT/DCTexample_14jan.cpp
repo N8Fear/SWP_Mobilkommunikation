@@ -216,7 +216,8 @@ int main(int argc, char* argv[]) {
 
 		// check for edges
 		cv::Mat contours;
-		cv::Canny(frame, contours, 30, 90);	
+		cv::GaussianBlur(frame, contours, Size(7, 7), 0, 0);
+		cv::Canny(contours, contours, 30, 90);	
 
 		// show results
 		imshow("MyPlayback", frame);
