@@ -107,9 +107,9 @@ SPTrack::SPTrack(int argc, char *argv[])
 	skip_sec = 0;
 	parse_cl_param(argc, argv);
 	init_player(argv[1]);
+	this->play_stream();
 }
 
 int main(int argc, char* argv[]) {
-	SPTrack *spt = new SPTrack(argc, argv);
-	spt->play_stream();
+	new SPTrack(argc, argv);
 }
