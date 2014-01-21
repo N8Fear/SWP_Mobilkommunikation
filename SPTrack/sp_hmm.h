@@ -1,12 +1,10 @@
 #pragma once
-
+#include "SPTrack.h"
 #include "CvHMM/CvHMM.h"
 
 #define OBS1 0
 #define OBS2 1
 #define OBS3 2
-
-#define BLOCKSIZE 8
 
 class sp_hmm {
 	public:

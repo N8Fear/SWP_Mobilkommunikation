@@ -40,7 +40,6 @@ int SPTrack::init_loop(char *path)
 		cerr << "Cannot open video stream!" << endl;
 		return -1;
 	}
-	//namedWindow("Player", CV_WINDOW_AUTOSIZE&CV_GUI_NORMAL);
 	player= new sp_player("Player");
 
 
@@ -72,7 +71,6 @@ int SPTrack::play_stream()
 		}
 		frame = run_dct->exec_dct(frame);
 		gen_histogram(frame);
-		//imshow("Player", frame);
 		player->update_player(frame);
 		if(waitKey(30) == 27) {
 			for (int i=0; i<256; i++)

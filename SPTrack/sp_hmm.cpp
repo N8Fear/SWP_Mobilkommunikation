@@ -1,5 +1,4 @@
 #include "SPTrack.h"
-//#include "CvHMM/CvHMM.h"
 #include "sp_hmm.h"
 
 using namespace std;
