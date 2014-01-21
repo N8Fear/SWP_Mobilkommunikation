@@ -1,5 +1,3 @@
-#include "SPTrack.h"
-#include "sp_dct.h"
 #include <stdio.h>
 #include <iostream>
 #include <vector>
@@ -7,6 +5,11 @@
 #include <opencv2/opencv.hpp>
 #include "opencv2/highgui/highgui.hpp"
 
+
+#include "SPTrack.h"
+#include "sp_dct.h"
+#include "sp_hmm.h"
+#include "sp_player.h"
 
 using namespace cv;
 using namespace std;
@@ -19,6 +22,7 @@ class SPTrack{
 		int init_loop(char *path);
 		int parse_cl_param(int argc, char *argv[]);
 		DCT *run_dct;
+		sp_player *player;
 		long long int histogram[256];
 		void gen_histogram(Mat);
 		VideoCapture cap;
@@ -36,7 +40,9 @@ int SPTrack::init_loop(char *path)
 		cerr << "Cannot open video stream!" << endl;
 		return -1;
 	}
-	namedWindow("Player", CV_WINDOW_AUTOSIZE&CV_GUI_NORMAL);
+	//namedWindow("Player", CV_WINDOW_AUTOSIZE&CV_GUI_NORMAL);
+	player= new sp_player("Player");
+
 
 	/* Initialization of sub processes and stuff: */
 
@@ -66,7 +72,8 @@ int SPTrack::play_stream()
 		}
 		frame = run_dct->exec_dct(frame);
 		gen_histogram(frame);
-		imshow("Player", frame);
+		//imshow("Player", frame);
+		player->update_player(frame);
 		if(waitKey(30) == 27) {
 			for (int i=0; i<256; i++)
 				printf("%d;%llu;\n",i,histogram[i]);

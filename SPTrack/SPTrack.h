@@ -23,7 +23,6 @@
 #include "opencv2/imgproc/imgproc_c.h"
 #include "opencv2/video/background_segm.hpp"
 
-#include "CvHMM/CvHMM.h"
 #include <time.h>
 
 
@@ -37,7 +36,7 @@
 
 #define BLOCKSIZE 8
 
-class sp_hmm {
+/*class sp_hmm {
 	public:
 		int hmm_init();
 		int hmm_learn(cv::Mat);
@@ -57,3 +56,4 @@ class sp_hmm {
 		cv::Mat EMITGUESS;
 		cv::Mat INITGUESS;
 };
+*/

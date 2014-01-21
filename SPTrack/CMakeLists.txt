@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(SPTrack)
 FIND_PACKAGE(OpenCV REQUIRED)
-ADD_EXECUTABLE(SPTrack SPTrack.cpp sp_dct.cpp sp_hmm.cpp)
+ADD_EXECUTABLE(SPTrack SPTrack.cpp sp_dct.cpp sp_hmm.cpp sp_player.cpp)
 TARGET_LINK_LIBRARIES(SPTrack ${OpenCV_LIBS})
 
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} -ggdb -Wall")
