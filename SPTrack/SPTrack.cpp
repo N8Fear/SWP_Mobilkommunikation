@@ -18,8 +18,6 @@ class SPTrack{
 		long skip_sec;
 		int init_player(char *path);
 		int parse_cl_param(int argc, char *argv[]);
-//		int init_dct();
-//		Mat exec_dct(Mat);
 		DCT *run_dct;
 		long long int histogram[256];
 		void gen_histogram(Mat);

@@ -57,6 +57,3 @@ class sp_hmm {
 		cv::Mat EMITGUESS;
 		cv::Mat INITGUESS;
 };
-
-/* not necessary anymore: */
-int legacy(int argc, char* argv[]) ;
