@@ -16,7 +16,7 @@ using namespace gpu;
 class SPTrack{
 	private:
 		long skip_sec;
-		int init_player(char *path);
+		int init_loop(char *path);
 		int parse_cl_param(int argc, char *argv[]);
 		DCT *run_dct;
 		long long int histogram[256];
@@ -28,7 +28,7 @@ class SPTrack{
 		SPTrack(int argc, char *argv[]);
 };
 
-int SPTrack::init_player(char *path)
+int SPTrack::init_loop(char *path)
 {
 	VideoCapture capture(path);
 	cap = capture;
@@ -106,7 +106,7 @@ SPTrack::SPTrack(int argc, char *argv[])
 {
 	skip_sec = 0;
 	parse_cl_param(argc, argv);
-	init_player(argv[1]);
+	init_loop(argv[1]);
 	this->play_stream();
 }
 
