@@ -40,10 +40,9 @@ int SPTrack::init_loop(char *path)
 		cerr << "Cannot open video stream!" << endl;
 		return -1;
 	}
-	player= new sp_player("Player");
-
-
 	/* Initialization of sub processes and stuff: */
+
+	player= new sp_player("Player");
 
 //	sp_hmm *hmm= new sp_hmm();
 
