@@ -9,10 +9,12 @@
 #include <opencv2/opencv.hpp>
 #include "opencv2/highgui/highgui.hpp"
 
-#include <time.h>
+//#include <time.h>
 
+#include "frame_container.h"
 #include "sp_player.h"
 #include "sp_dct.h"
+#include "sp_hmm.h"
 
 #define BLACK 0
 #define GRAY 133
