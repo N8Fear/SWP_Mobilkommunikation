@@ -1,36 +1,18 @@
-#include "SPTrack.h"
-#include "sp_dct.h"
 #include <stdio.h>
 #include <iostream>
-#include <vector>
-
 #include <opencv2/opencv.hpp>
-#include "opencv2/highgui/highgui.hpp"
+#include <opencv2/highgui/highgui.hpp>
 
+
+#include "SPTrack.h"
+#include "sp_dct.h"
+#include "sp_hmm.h"
+#include "sp_player.h"
 
 using namespace cv;
 using namespace std;
-using namespace gpu;
 
-
-class SPTrack{
-	private:
-		long skip_sec;
-		int init_player(char *path);
-		int parse_cl_param(int argc, char *argv[]);
-//		int init_dct();
-//		Mat exec_dct(Mat);
-		DCT *run_dct;
-		long long int histogram[256];
-		void gen_histogram(Mat);
-		VideoCapture cap;
-
-	public:
-		int play_stream();
-		SPTrack(int argc, char *argv[]);
-};
-
-int SPTrack::init_player(char *path)
+int SPTrack::init_loop(char *path)
 {
 	VideoCapture capture(path);
 	cap = capture;
@@ -38,13 +20,13 @@ int SPTrack::init_player(char *path)
 		cerr << "Cannot open video stream!" << endl;
 		return -1;
 	}
-	namedWindow("Player", CV_WINDOW_AUTOSIZE&CV_GUI_NORMAL);
-
 	/* Initialization of sub processes and stuff: */
+
+	player= new sp_player("Player");
 
 //	sp_hmm *hmm= new sp_hmm();
 
-	run_dct = new DCT();
+	run_dct = new sp_dct();
 	run_dct->init_dct(&cap);
 
 	memset(histogram, 0, 256);
@@ -53,22 +35,20 @@ int SPTrack::init_player(char *path)
 
 int SPTrack::play_stream()
 {
+	frame_container frame_cnt;
 	while (1) {
-		Mat frame;
-
 		if (skip_sec > 0) {
 			short fps = cap.get(CV_CAP_PROP_FPS);
 			for (int i = 0; i< skip_sec*fps; i++)
-				cap.read(frame);
+				frame_cnt.process_frame(&cap);
 			skip_sec = 0;
 		}
-		if (!cap.read(frame)) {
-			cerr << "Error reading frame from stream" << endl;
-			break;
-		}
-		frame = run_dct->exec_dct(frame);
-		gen_histogram(frame);
-		imshow("Player", frame);
+
+		frame_cnt.process_frame(&cap);
+		*frame_cnt.output = (run_dct->exec_dct(*frame_cnt.get_current())).clone();
+		gen_histogram(*frame_cnt.get_current());
+		player->update_player(*frame_cnt.output);
+
 		if(waitKey(30) == 27) {
 			for (int i=0; i<256; i++)
 				printf("%d;%llu;\n",i,histogram[i]);
@@ -108,10 +88,12 @@ SPTrack::SPTrack(int argc, char *argv[])
 {
 	skip_sec = 0;
 	parse_cl_param(argc, argv);
-	init_player(argv[1]);
+	init_loop(argv[1]);
+	this->play_stream();
 }
 
-int main(int argc, char* argv[]) {
-	SPTrack *spt = new SPTrack(argc, argv);
-	spt->play_stream();
+int main(int argc, char* argv[])
+{
+	new SPTrack(argc, argv);
+	return 0;
 }

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <opencv2/opencv.hpp>
-#include "SPTrack.h"
 
 enum DCT_Trend {
 	Up,
@@ -9,10 +8,10 @@ enum DCT_Trend {
 	Same,
 };
 
-class DCT {
+class sp_dct {
 	public:
 	//	enum DCT_Trend get_trend();
-		DCT();
+		sp_dct();
 		cv::Mat exec_dct(cv::Mat input);
 		int init_dct(cv::VideoCapture *cap);
 	private:

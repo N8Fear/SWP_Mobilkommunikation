@@ -1,4 +1,10 @@
 CMakeFiles/
 *.cmake
+*.a
 CMakeCache.txt
 Makefile
+
+SPTrack/SPTrack
+DCT/DC-AC
+DCT/DCTexample
+DCT/DCTexample_14jan
