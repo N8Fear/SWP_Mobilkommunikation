@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <iostream>
-#include <vector>
-
 #include <opencv2/opencv.hpp>
-#include "opencv2/highgui/highgui.hpp"
+#include <opencv2/highgui/highgui.hpp>
 
 
 #include "SPTrack.h"
@@ -13,24 +11,6 @@
 
 using namespace cv;
 using namespace std;
-using namespace gpu;
-
-
-class SPTrack{
-	private:
-		long skip_sec;
-		int init_loop(char *path);
-		int parse_cl_param(int argc, char *argv[]);
-		DCT *run_dct;
-		sp_player *player;
-		long long int histogram[256];
-		void gen_histogram(Mat);
-		VideoCapture cap;
-
-	public:
-		int play_stream();
-		SPTrack(int argc, char *argv[]);
-};
 
 int SPTrack::init_loop(char *path)
 {
@@ -46,7 +26,7 @@ int SPTrack::init_loop(char *path)
 
 //	sp_hmm *hmm= new sp_hmm();
 
-	run_dct = new DCT();
+	run_dct = new sp_dct();
 	run_dct->init_dct(&cap);
 
 	memset(histogram, 0, 256);
@@ -114,6 +94,8 @@ SPTrack::SPTrack(int argc, char *argv[])
 	this->play_stream();
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
 	new SPTrack(argc, argv);
+	return 0;
 }

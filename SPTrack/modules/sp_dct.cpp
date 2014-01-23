@@ -1,14 +1,15 @@
 #include <opencv2/opencv.hpp>
 #include "sp_dct.h"
+#include "SPTrack.h"
 
 using namespace cv;
 
-DCT::DCT()
+sp_dct::sp_dct()
 {
 	width_offset = 0;
 }
 
-int DCT::init_dct(cv::VideoCapture *cap)
+int sp_dct::init_dct(cv::VideoCapture *cap)
 {
 	int mod;
 	int width = cap->get(CV_CAP_PROP_FRAME_WIDTH);
@@ -17,7 +18,7 @@ int DCT::init_dct(cv::VideoCapture *cap)
 	((mod=(height % 8))== 0) ? height_offset = 0: height_offset = BLOCKSIZE -mod;
 	return 0;
 }
-Mat DCT::exec_dct(Mat input)
+Mat sp_dct::exec_dct(Mat input)
 {
 	Mat dct_img;
 	// create gray snapshot of the current frame (RGB -> GRAY)
