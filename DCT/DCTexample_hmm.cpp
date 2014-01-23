@@ -274,6 +274,10 @@ int main(int argc, char* argv[]) {
 	return 0;
 }
 
+// TODO HMM
+//		* Datenstruktur HMM für jeden Block
+//		* Baum Welch Lernen für jeden Block einzeln
+//		* HMM Wahrscheinlichkeiten abspeichern / einlesen
 // TODO EFFIZIENZ
 //		* 2dMatrix mit deques als elemente ist sau langsam? -- Viterbi ist das Problem!
 // TODO WHITY
