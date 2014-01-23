@@ -35,22 +35,20 @@ int SPTrack::init_loop(char *path)
 
 int SPTrack::play_stream()
 {
+	frame_container frame_cnt;
 	while (1) {
-		Mat frame;
-
 		if (skip_sec > 0) {
 			short fps = cap.get(CV_CAP_PROP_FPS);
 			for (int i = 0; i< skip_sec*fps; i++)
-				cap.read(frame);
+				frame_cnt.process_frame(&cap);
 			skip_sec = 0;
 		}
-		if (!cap.read(frame)) {
-			cerr << "Error reading frame from stream" << endl;
-			break;
-		}
-		frame = run_dct->exec_dct(frame);
-		gen_histogram(frame);
-		player->update_player(frame);
+
+		frame_cnt.process_frame(&cap);
+		*frame_cnt.output = (run_dct->exec_dct(*frame_cnt.get_current())).clone();
+		gen_histogram(*frame_cnt.get_current());
+		player->update_player(*frame_cnt.output);
+
 		if(waitKey(30) == 27) {
 			for (int i=0; i<256; i++)
 				printf("%d;%llu;\n",i,histogram[i]);

@@ -9,12 +9,13 @@
  */
 class frame_container{
 	private:
+		int cur;
 		cv::Mat container[26];
 		cv::Mat *current;
 
 	public:
 		frame_container();
-		cv::Mat *get_output();
-		cv::Mat *update_current();
+		cv::Mat *get_current();
+		cv::Mat *process_frame(cv::VideoCapture *cap);
 		cv::Mat *output;
 };
