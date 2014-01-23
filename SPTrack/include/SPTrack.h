@@ -23,7 +23,6 @@
 #include "opencv2/imgproc/imgproc_c.h"
 #include "opencv2/video/background_segm.hpp"
 
-#include "CvHMM/CvHMM.h"
 #include <time.h>
 
 
