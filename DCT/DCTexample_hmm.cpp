@@ -44,7 +44,7 @@ using namespace gpu;
 #define OBS5 4 		// DC_WHITE | AC_FLAT
 #define OBS6 5 		// DC_WHITE | AC_EDGE
 
-#define OBS_MAX 10
+#define OBS_MAX 2
 #define FLAT_2_EDGE 1
 #define AC_STDDEV 25
 
@@ -91,7 +91,7 @@ int main(int argc, char* argv[]) {
 	namedWindow("DC-AC", CV_WINDOW_AUTOSIZE);
 
 	// CvHMM training sequences variables and GUESS data
-	int seq_max = 20;				// 20 secs
+	int seq_max = 20;					// 20 secs
 	int block_r = 33 * blocksize;		// 264
 	int block_c = 61 * blocksize;		// 488
 	int seq_num = 0;
@@ -139,7 +139,7 @@ int main(int argc, char* argv[]) {
 			cerr << "Cannot read the frame from video file" << endl;
 			break;
 		}
-		//TODO GAUSSIAN BLUT GOOD IDEA!?!?
+		// blur image to reduce false detection of edges
 		cv::GaussianBlur(frame, frame, Size(7, 7), 0, 0);
 
 		// create gray snapshot of the current frame (RGB -> GRAY)
@@ -181,8 +181,7 @@ int main(int argc, char* argv[]) {
 			}
 			merge(outplanes, block);
 
-		//************************ [HMM] ********************************//
-
+		// [HMM DECODING]
 		// will contain the current observation ID (OBS is 2D right now)
 		int temp_OBS = -1;
 
@@ -237,11 +236,12 @@ int main(int argc, char* argv[]) {
 				}
 		}
 
-		// [HMM LEARNING] Baum Welch starts after 25 seconds
 		/*
-		// save observations in training sequence
-		// train_seq.at<int>(seq_num, obs_num) = // ADJUST TO CURRENT BLOCK;
+		// [HMM LEARNING]
+		// save observations in training sequence for training block
+		train_seq.at<int>(seq_num, obs_num) = obs_matrix[block_c/blocksize][block_r/blocksize][OBS_MAX-1];
 		
+		// save observations for given block
 		obs_num++;
 		if (obs_num == OBS_MAX){
 	
@@ -275,6 +275,8 @@ int main(int argc, char* argv[]) {
 }
 
 // TODO EFFIZIENZ
-//		* 2dMatrix mit deques als elemente ist sau langsam
+//		* 2dMatrix mit deques als elemente ist sau langsam? -- Viterbi ist das Problem!
 // TODO WHITY
-//		* also auf OBS12 gehen, +4 addition oder so
+//		* also auf OBS12 gehen, per +6 Addition arbeiten
+// TODO GAUSSIAN 
+// 		+ Blur good idea?
