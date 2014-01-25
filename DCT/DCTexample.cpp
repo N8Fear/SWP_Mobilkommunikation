@@ -1,7 +1,7 @@
-// Execute with one or two arguments:
-//	* Path of the input video (a String)
-//	* Optional: seconds skipped from the start of the video
-
+// Execute with:
+// 	./DCTexample /path/to/video/file.avi seconds-offset /path/to/hmm/input/data/ /path/to/hmm/output/data/
+//
+// 	example: make && ./DCTexample /home/skyo/Desktop/DCT/ir_640x480_8.yuv.avi 15 /home/skyo/Desktop/DCT/data/input/ /home/skyo/Desktop/DCT/data/output/
 
 #include <stdio.h>
 #include <iostream>
@@ -25,7 +25,14 @@
 #include "opencv2/video/background_segm.hpp"
 
 #include "CvHMM.h"
+
 #include <time.h>
+#include <math.h>
+#include <deque>
+#include <iostream>
+#include <fstream>
+#include <stdlib.h>
+#include <string>
 
 using namespace cv;
 using namespace std;
@@ -35,13 +42,30 @@ using namespace gpu;
 #define GRAY 133
 #define WHITE 255
 
-#define OBS1 0
-#define OBS2 1
-#define OBS3 2
+#define OBS1 0		// DC_BLACK | AC_FLAT
+#define OBS2 1 		// DC_BLACK | AC_EDGE
+#define OBS3 2 		// DC_GRAY  | AC_FLAT
+#define OBS4 3 		// DC_GRAY  | AC_EDGE
+#define OBS5 4 		// DC_WHITE | AC_FLAT
+#define OBS6 5 		// DC_WHITE | AC_EDGE
+
+#define AC_FLAT_2_EDGE 1 	// offset to change AC_FLAT to AC_EDGE in current observation
+#define AC_STDDEV 25 		// threshold for standard deviation
+
+#define VIT_OBS_MAX 3 		// describes how many last observation are used for viterbi
+
+#define TRAIN_OBS_MAX 25	// used by Baum Welch (25 frames = 1 second)
+#define TRAIN_SEQ_MAX 45 	// used by Baum Welch (45 seconds in total)
+#define TRAIN_MAX_ITER 3	// Baum Welch stop criteria (max_int = 2147483647)
+
+
 
 int main(int argc, char* argv[]) {
 
+	string dir_input = "";
+	string dir_output = "";
 	long skip = 0;
+
 	// argument checking
 	switch (argc){
 		case 2:
@@ -51,6 +75,15 @@ int main(int argc, char* argv[]) {
 			skip = (long)atoi(argv[2]);
 			//cout << "Skip " << skip << " seconds..." << endl;
 			break;
+		case 4:
+			dir_input = argv[2]; // /home/skyo/Desktop/DCT/data/input/"
+			dir_output = argv[3]; // /home/skyo/Desktop/DCT/data/output/"
+			break;
+		case 5:
+			skip = (long)atoi(argv[2]); // 15
+			dir_input = argv[3]; // /home/skyo/Desktop/DCT/data/input/"
+			dir_output = argv[4]; // /home/skyo/Desktop/DCT/data/output/"
+			break;
 		default:
 		cout << "Syntax: " << argv[0]
 			<< " <filename> [<skipped seconds from start of video>]"
@@ -59,9 +92,9 @@ int main(int argc, char* argv[]) {
 	}
 
 	// open the video file for reading
-	VideoCapture cap(argv[1]);
+	VideoCapture cap(argv[1]); 
 	if (!cap.isOpened()) {
-
+	
 		cerr << "Cannot open the video file" << endl;
 		return -1;
 	}
@@ -69,51 +102,76 @@ int main(int argc, char* argv[]) {
 	// get window size
 	int width = cap.get(CV_CAP_PROP_FRAME_WIDTH);
 	int heigth = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
-
+		
 	// DCT requires EVEN image dimensions, so calculate offsets
 	// however we use blocks of 8x8 pixel (which are even)
 	int mod, width_offset, heigth_offset;
 	int blocksize = 8;
-	( (mod=(width % 8)) == 0) ? width_offset = 0 : width_offset =
-		blocksize-mod;
-	( (mod=(heigth % 8)) == 0) ? heigth_offset = 0 : heigth_offset =
-		blocksize-mod;
+	( (mod=(width % 8)) == 0) ? width_offset = 0 : width_offset = blocksize-mod;
+	( (mod=(heigth % 8)) == 0) ? heigth_offset = 0 : heigth_offset = blocksize-mod;
 
 	// create a window for playback and DCT
 	namedWindow("MyPlayback", CV_WINDOW_AUTOSIZE);
-	namedWindow("MyDCT", CV_WINDOW_AUTOSIZE);
+	namedWindow("DC-AC", CV_WINDOW_AUTOSIZE);
 
-	// histogramm of used gray values
-	unsigned long long int histogramm [256] = {0};
+	int train_seq = 0;					// Baum Welch counter - sequences
+	int train_obs = 0;					// Baum Welch counter - observation (duration of sequence)
+	
+	CvHMM hmm;							// needed for some static function calls
 
-	// CvHMM training sequences variables and GUESS data
-	int obs_max = 25;			// 25 frames
-	int seq_max = 20;			// 20 secs
-	int block_r = 33 * blocksize;		// 264
-	int block_c = 61 * blocksize;		// 488
-	int seq_num = 0;
-	int obs_num = 0;
-	int max_iter = 2147483647;
+	// just some hmm init data, will only be used if files with hmm information cannot be loaded
+	double TRGUESSdata[] = { 	9/10.0 , 1/10.0,
+ 								3/10.0 , 7/10.0 };
+	double EMITGUESSdata[] = { 	8/20.0 , 5/20.0 , 3/20.0 , 1/20.0 , 2/20.0 , 1/20.0 ,
+  								1/20.0 , 3/20.0 , 2/20.0 , 5/20.0 , 4/20.0 , 5/20.0 };	
+	double INITGUESSdata[] = { 9/10.0 , 1/10.0 };
 
-	CvHMM hmm;
-	cv::Mat train_seq = Mat(seq_max, obs_max, CV_32S);
+	// create container, which will remember some observatins for a given block to enable viterbi,
+	// container with Mat elements describing the HMM for a given Block,
+	// and a Matrix containing training sequences for Baum Welch with ALL observations
+	vector < vector < deque<int> > > obs_matrix;
+	vector < vector < Mat > > trans_matrix;
+	vector < vector < Mat > > emit_matrix;
+	vector < vector < Mat > > init_matrix;
+	vector < vector < Mat > > train_matrix;
+	
+	// now we have an empty 2D-matrix with deques of size (0,0) and empty Matrix. 
+	// resize it and init deques with 25 observations, default = obs1
+	// Matrix should be initiated with the default array or data read from learn-file
+	int num_of_col = (width + width_offset)/blocksize;
+	int num_of_row = (heigth + heigth_offset)/blocksize;
+	obs_matrix.resize(num_of_col, vector <deque<int> > (num_of_row, deque<int> (VIT_OBS_MAX, OBS1)));
+	trans_matrix.resize(num_of_col, vector < Mat > (num_of_row, Mat(2,2, CV_64F, TRGUESSdata)));
+	emit_matrix.resize(num_of_col, vector < Mat > (num_of_row, Mat(2,6, CV_64F, EMITGUESSdata)));
+	init_matrix.resize(num_of_col, vector < Mat > (num_of_row, Mat(1,2, CV_64F, INITGUESSdata)));
+	train_matrix.resize(num_of_col, vector < Mat > (num_of_row, Mat(TRAIN_SEQ_MAX, TRAIN_OBS_MAX, CV_32S)));
 
-	double TRGUESSdata[] = { 0.95 , 0.05,	// background
-				 0.8 , 0.2 };	// foreground
-	cv::Mat TRGUESS = cv::Mat(2,2, CV_64F, TRGUESSdata);
+	// read 2d hmm vectors from file
+	ostringstream fname_emit_i;
+	ostringstream fname_init_i;
+	ostringstream fname_trans_i;
+	fname_emit_i << dir_input << "emit2D.yml";
+	fname_init_i << dir_input << "init2D.yml";
+	fname_trans_i << dir_input << "trans2D.yml";
+	FileStorage file_emit(fname_emit_i.str(), FileStorage::READ);
+	FileStorage file_init(fname_init_i.str(), FileStorage::READ);
+	FileStorage file_trans(fname_trans_i.str(), FileStorage::READ);
+	for (int r = 0; r < num_of_row; r++)
+		for (int c = 0; c < num_of_col; c++) {
+	 		ostringstream id_stream;
+	 		id_stream << "row_" << r << "-col_" << c;
+	 		string ID = id_stream.str();
+			file_emit[ID] >> emit_matrix[c][r];
+			file_init[ID] >> init_matrix[c][r];
+			file_trans[ID] >> trans_matrix[c][r];
+	}
+	file_emit.release();
+	file_init.release();
+	file_trans.release();
 
-	double EMITGUESSdata[] = { 0.85 , 0.1 , 0.05 ,
-				   0.7 , 0.15 , 0.15 };
-	cv::Mat EMITGUESS = cv::Mat(2,3, CV_64F, EMITGUESSdata);
-
-	double INITGUESSdata[] = { 0.95 , 0.05 };
-	cv::Mat INITGUESS = cv::Mat(1,2, CV_64F, INITGUESSdata);
-
-	unsigned long long int frame_counter = 0;
-
-
-	while(1) {
-		// read new frame from video, stop playback on failure
+	while(1) { 
+		
+		// skip frames
 		Mat frame;
 		if (skip > 0){
 			short fps = cap.get(CV_CAP_PROP_FPS);
@@ -121,39 +179,46 @@ int main(int argc, char* argv[]) {
 				cap.read(frame);
 			skip=0;
 		}
-		if (!cap.read(frame)) {
+		// read new frame from video, stop playback on failure
+		if (!cap.read(frame)) { 
 			cerr << "Cannot read the frame from video file" << endl;
 			break;
 		}
+
+		// blur image to reduce false detection of edges
+		cv::GaussianBlur(frame, frame, Size(7, 7), 0, 0);
 
 		// create gray snapshot of the current frame (RGB -> GRAY)
 		// should not influence img data or quality on IR material
 		Mat gray_img;
 		cvtColor(frame, gray_img, CV_RGB2GRAY);
-
-		// make sure both image dimensions are multiple of 2 / blocksize
+		
+		// make sure both image dimensions are multiple of 2 AND blocksize 
 		Mat dim_img;
-		copyMakeBorder(gray_img, dim_img, 0, heigth_offset, 0,
-				width_offset, IPL_BORDER_REPLICATE);
-
+		copyMakeBorder(gray_img, dim_img, 0, heigth_offset, 0, width_offset, IPL_BORDER_REPLICATE);
+		 
 		// grayscale image is 8bits per pixel, but dct() requires float
 		Mat float_img = Mat(dim_img.rows, dim_img.cols, CV_64F);
 		dim_img.convertTo(float_img, CV_64F);
-
+		
 		// let's do the DCT now: image => frequencies
 		// select eveery 8x8 bock of the image
 		Mat dct_img = float_img.clone();
-
+		Mat output_img = float_img.clone();
+		Mat output_img2 = float_img.clone();
+		float_img.convertTo(output_img, CV_8UC1);
+		float_img.convertTo(output_img2, CV_8UC1);
+		
 		for (int r = 0; r < dct_img.rows; r += blocksize)
 		for (int c = 0; c < dct_img.cols; c += blocksize) {
-
+				
 			// For each block, split into planes, do dct,
 			// and merge back into the block
 			Mat block = dct_img(Rect(c, r, blocksize, blocksize));
 			vector<Mat> planes;
 			split(block, planes);
 			vector<Mat> outplanes(planes.size());
-
+		
 			// note: it seems that only one plane exist, so
 			// loop might me redundant
 			for (size_t k = 0; k < planes.size(); k++) {
@@ -161,109 +226,111 @@ int main(int argc, char* argv[]) {
 			}
 			merge(outplanes, block);
 
-			// division by 8 ensures uint_8 range of DC
+			// [HMM DECODING]
+			// will contain the current observation ID (OBS is 2D right now)
+			int temp_OBS = -1;
+
+			// division by 8 ensures uint_8 range of DC, encode DC in OBS
 			double dc = block.at<double>(0,0)/8;
-			/*
-			// set one value for all pixels in block
-			for (int i=0; i<blocksize; ++i){
-				for (int j=0; j<blocksize; ++j) {
 
-					if (dc < 90) { //bg
-						block.at<double>(i,j) = BLACK;
-					}
-					else if (dc > 200) { //human
-						block.at<double>(i,j) = WHITE;
-					} else {
-						block.at<double>(i,j) = GRAY;
-					}
+			if (dc < 50)
+				temp_OBS = OBS1;
+			
+			else if (dc > 190)
+	 			temp_OBS = OBS5;
+			
+			else 
+				temp_OBS = OBS3;
+
+			// check standard deviation, encode AC-std-dev in OBS
+			double standard_deviation = 0;
+			for (int i=0; i<blocksize; ++i)
+		 	for (int j=0; j<blocksize; ++j) {
+
+				if (!((i==0)&&(j==0))){ //EXCLUDE DC
+					
+					standard_deviation +=
+					pow(block.at<double>(i,j), 2);
 				}
-			 }
-			 */
-		}
-
-		// update standard deviation
-		double standard_deviation = 0;
-		for (int r = block_r; r < block_r+blocksize; r++)
-		for (int c = block_c; c < block_c+blocksize; c++) {
-
-			if (!((r==block_r)&&(c==block_c))){ //EXCLUDE DC
-				
-				standard_deviation +=
-				pow(dct_img.at<double>(r,c), 2);
 			}
+			standard_deviation = sqrt (standard_deviation/63);
+
+			if (standard_deviation > AC_STDDEV)
+				temp_OBS += AC_FLAT_2_EDGE;
+
+			// remember last VIT_OBS_MAX many observations, so we can perform viterbi to deduce current state
+			obs_matrix[c/blocksize][r/blocksize].pop_front();
+			obs_matrix[c/blocksize][r/blocksize].push_back(temp_OBS);
+			//for (int i=0; i<obs_matrix[c/blocksize][r/blocksize].size(); ++i)
+			//	cout << obs_matrix[c/blocksize][r/blocksize][i] << ' ';
+			//cout << endl;
+
+			// observation recognition done, now use viterbi to get most propable state
+			Mat viterbi_seq = Mat(1, VIT_OBS_MAX, CV_32S);
+			for (int i=0; i<obs_matrix[c/blocksize][r/blocksize].size(); ++i){
+				viterbi_seq.at<int>(0,i) = obs_matrix[c/blocksize][r/blocksize][i];
+			}
+			cv::Mat estates;
+			hmm.viterbi(viterbi_seq, trans_matrix[c/blocksize][r/blocksize], emit_matrix[c/blocksize][r/blocksize], init_matrix[c/blocksize][r/blocksize], estates);
+			
+			// mark the block BLACK, if state 0 (background)
+			if (estates.at<int>(0,estates.cols-1) == 0)
+				for (int i=0; i<blocksize; ++i)
+					for (int j=0; j<blocksize; ++j) {
+						output_img.at<uint8_t>(r+i, c+j) = BLACK;
+					}
+
+			// [HMM LEARNING]
+			// save observations in training sequence for current block
+			train_matrix[c/blocksize][r/blocksize].at<int>(train_seq, train_obs) = temp_OBS;
 		}
-		standard_deviation = sqrt (standard_deviation/63);
-		frame_counter++;
-		cout << frame_counter << ";" << standard_deviation << ";" <<
-			endl;
 
-		// matrice contains real / complex parts, filter them seperatly
-		// see: http://stackoverflow.com/questions/8059989/
-		// just convert back to 8 bits per pixel
-		dct_img.convertTo(dct_img, CV_8UC1);
-
-		// update histrogramm information
-		for (int r = 0; r < dct_img.rows; r += blocksize)
-		for (int c = 0; c < dct_img.cols; c += blocksize) {
-
-			histogramm[dct_img.at<uint8_t>(r,c)] += 1;
-			if (histogramm[dct_img.at<uint8_t>(r,c)] == 0)
-				cerr << "INTEGER OVERFLOW @HISTROGRAMM" << endl;
-		}
-
-		/*
-		// set current observation value for blocks histrogramm value
-		if (dct_img.at<uint8_t>(block_r, block_c) == BLACK)
-			train_seq.at<int>(seq_num, obs_num) = OBS1;
-		else if (dct_img.at<uint8_t>(block_r, block_c) == GRAY)
-			train_seq.at<int>(seq_num, obs_num) = OBS2;
-		else if (dct_img.at<uint8_t>(block_r, block_c) == WHITE)
-			train_seq.at<int>(seq_num, obs_num) = OBS3;
-		else
-			break;
-		
-		// increment HMM counters ...
-		obs_num++;
-		if (obs_num == obs_max){
-
+		// increment counters for Baum-Welch Training!
+		train_obs++;
+		if (train_obs == TRAIN_OBS_MAX){
+	
 			// start new observation sequence
-			obs_num = 0;
-			seq_num++;
+			train_obs = 0;
+			train_seq++;
 
 			// ... and start training if enough information
-			if (seq_num == seq_max){
+			if (train_seq == TRAIN_SEQ_MAX){
 
-				cout << "Starting Baum-Welch-Training with:"
-					<< endl << endl << train_seq << endl;
-				hmm.printModel(TRGUESS, EMITGUESS, INITGUESS);
-				for (int k=0; k<1000; k++){
-					hmm.train(train_seq, max_iter,
-						TRGUESS, EMITGUESS, INITGUESS);
+				for (int r = 0; r < num_of_row; r++)
+					for (int c = 0; c < num_of_col; c++) {
+						hmm.train(train_matrix[c][r], TRAIN_MAX_ITER, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
 				}
-				cout << endl << "====== Result =======" << endl;
-				hmm.printModel(TRGUESS, EMITGUESS, INITGUESS);
-				break;
-			}
-		}
-		*/
 
-		// mark the block which is used for training
-		for (int i=0; i<blocksize; ++i){
-			for (int j=0; j<blocksize; ++j) {
-				dct_img.at<uint8_t>(block_r+i, block_c+j) =
-					WHITE;
+				// write 2d vector into file, all adjusted HMM will be saved!
+				ostringstream fname_emit_o;
+				ostringstream fname_init_o;
+				ostringstream fname_trans_o;
+				fname_emit_o << dir_output << "emit2D.yml";
+				fname_init_o << dir_output << "init2D.yml";
+				fname_trans_o << dir_output << "trans2D.yml";
+				FileStorage file_emit(fname_emit_o.str(), FileStorage::WRITE);
+				FileStorage file_init(fname_init_o.str(), FileStorage::WRITE);
+				FileStorage file_trans(fname_trans_o.str(), FileStorage::WRITE);
+				for (int r = 0; r < num_of_row; r++)
+					for (int c = 0; c < num_of_col; c++) {
+
+						ostringstream id_stream;
+						id_stream << "row_" << r << "-col_" << c;
+						string ID = id_stream.str();
+						file_emit << ID << emit_matrix[c][r];
+						file_init << ID << init_matrix[c][r];
+						file_trans << ID << trans_matrix[c][r];
+				}
+				break;
 			}
 		}
 
 		// show results
 		imshow("MyPlayback", frame);
-		imshow("MyDCT", dct_img);
+		imshow("DC-AC", output_img);
 
 		// wait for 'esc' key press for 30 ms -- exit on 'esc' key
 		if(waitKey(30) == 27) {
-			for (int i=0; i<256; i++){
-				// printf("%d;%llu;\n", i, histogramm[i]);
-			}
 			break;
 		}
 	}
