@@ -55,9 +55,11 @@ using namespace gpu;
 #define VIT_OBS_MAX 3 		// describes how many last observation are used for viterbi
 
 #define TRAIN_OBS_MAX 25	// used by Baum Welch (25 frames = 1 second)
-#define TRAIN_SEQ_MAX 45 	// used by Baum Welch (45 seconds in total)
+#define TRAIN_SEQ_MAX 15 	// used by Baum Welch (15 seconds in total)
 #define TRAIN_MAX_ITER 3	// Baum Welch stop criteria (max_int = 2147483647)
 
+#define DEBUG_R 0
+#define DEBUG_C 5
 
 
 int main(int argc, char* argv[]) {
@@ -140,11 +142,27 @@ int main(int argc, char* argv[]) {
 	// Matrix should be initiated with the default array or data read from learn-file
 	int num_of_col = (width + width_offset)/blocksize;
 	int num_of_row = (heigth + heigth_offset)/blocksize;
+
 	obs_matrix.resize(num_of_col, vector <deque<int> > (num_of_row, deque<int> (VIT_OBS_MAX, OBS1)));
-	trans_matrix.resize(num_of_col, vector < Mat > (num_of_row, Mat(2,2, CV_64F, TRGUESSdata)));
-	emit_matrix.resize(num_of_col, vector < Mat > (num_of_row, Mat(2,6, CV_64F, EMITGUESSdata)));
-	init_matrix.resize(num_of_col, vector < Mat > (num_of_row, Mat(1,2, CV_64F, INITGUESSdata)));
-	train_matrix.resize(num_of_col, vector < Mat > (num_of_row, Mat(TRAIN_SEQ_MAX, TRAIN_OBS_MAX, CV_32S)));
+
+	for (int i = 0; i<num_of_col; i++) {
+		
+		trans_matrix.push_back(vector<Mat>());
+		emit_matrix.push_back(vector<Mat>());
+		init_matrix.push_back(vector<Mat>());
+		train_matrix.push_back(vector<Mat>());
+		
+		for (int j=0;j<num_of_row;j++){
+		
+			trans_matrix[i].push_back(Mat(2,2, CV_64F, TRGUESSdata));
+			emit_matrix[i].push_back(Mat(2,6, CV_64F, EMITGUESSdata));
+			init_matrix[i].push_back(Mat(1,2, CV_64F, INITGUESSdata));
+			train_matrix[i].push_back(Mat(TRAIN_SEQ_MAX, TRAIN_OBS_MAX, CV_32S, Scalar::all(0)));
+		}
+	}
+
+	// [VECTOR INIT DEBUG INFO]
+	hmm.printModel(trans_matrix[DEBUG_C][DEBUG_R], emit_matrix[DEBUG_C][DEBUG_R], init_matrix[DEBUG_C][DEBUG_R]);
 
 	// read 2d hmm vectors from file
 	ostringstream fname_emit_i;
@@ -169,6 +187,9 @@ int main(int argc, char* argv[]) {
 	file_init.release();
 	file_trans.release();
 
+	// [VECTOR INIT DEBUG INFO2]
+	hmm.printModel(trans_matrix[DEBUG_C][DEBUG_R], emit_matrix[DEBUG_C][DEBUG_R], init_matrix[DEBUG_C][DEBUG_R]);
+
 	while(1) { 
 		
 		// skip frames
@@ -179,6 +200,7 @@ int main(int argc, char* argv[]) {
 				cap.read(frame);
 			skip=0;
 		}
+
 		// read new frame from video, stop playback on failure
 		if (!cap.read(frame)) { 
 			cerr << "Cannot read the frame from video file" << endl;
@@ -209,12 +231,12 @@ int main(int argc, char* argv[]) {
 		float_img.convertTo(output_img, CV_8UC1);
 		float_img.convertTo(output_img2, CV_8UC1);
 		
-		for (int r = 0; r < dct_img.rows; r += blocksize)
-		for (int c = 0; c < dct_img.cols; c += blocksize) {
+		for (int r = 0; r < num_of_row; r++)
+		for (int c = 0; c < num_of_col; c++) {
 				
 			// For each block, split into planes, do dct,
 			// and merge back into the block
-			Mat block = dct_img(Rect(c, r, blocksize, blocksize));
+			Mat block = dct_img(Rect(c*blocksize, r*blocksize, blocksize, blocksize));
 			vector<Mat> planes;
 			split(block, planes);
 			vector<Mat> outplanes(planes.size());
@@ -259,30 +281,41 @@ int main(int argc, char* argv[]) {
 				temp_OBS += AC_FLAT_2_EDGE;
 
 			// remember last VIT_OBS_MAX many observations, so we can perform viterbi to deduce current state
-			obs_matrix[c/blocksize][r/blocksize].pop_front();
-			obs_matrix[c/blocksize][r/blocksize].push_back(temp_OBS);
-			//for (int i=0; i<obs_matrix[c/blocksize][r/blocksize].size(); ++i)
-			//	cout << obs_matrix[c/blocksize][r/blocksize][i] << ' ';
-			//cout << endl;
+			obs_matrix[c][r].pop_front();
+			obs_matrix[c][r].push_back(temp_OBS);
+
+			// [VITERBI DEBUG INFO]
+			// if (r == DEBUG_R && c == DEBUG_C) {
+			//  	cout << "OBS"  << temp_OBS << " [" ;
+			//  	for (int i=0; i<obs_matrix[c][r].size(); ++i){
+			//  		cout << obs_matrix[c][r][i] << ", ";
+			//  	}
+			//  	cout << "]" << endl;
+			// }
 
 			// observation recognition done, now use viterbi to get most propable state
 			Mat viterbi_seq = Mat(1, VIT_OBS_MAX, CV_32S);
-			for (int i=0; i<obs_matrix[c/blocksize][r/blocksize].size(); ++i){
-				viterbi_seq.at<int>(0,i) = obs_matrix[c/blocksize][r/blocksize][i];
+			for (int i=0; i<obs_matrix[c][r].size(); ++i){
+				viterbi_seq.at<int>(0,i) = obs_matrix[c][r][i];
 			}
 			cv::Mat estates;
-			hmm.viterbi(viterbi_seq, trans_matrix[c/blocksize][r/blocksize], emit_matrix[c/blocksize][r/blocksize], init_matrix[c/blocksize][r/blocksize], estates);
+			hmm.viterbi(viterbi_seq, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r], estates);
 			
 			// mark the block BLACK, if state 0 (background)
 			if (estates.at<int>(0,estates.cols-1) == 0)
 				for (int i=0; i<blocksize; ++i)
 					for (int j=0; j<blocksize; ++j) {
-						output_img.at<uint8_t>(r+i, c+j) = BLACK;
+						output_img.at<uint8_t>((r*blocksize)+i, (c*blocksize)+j) = BLACK;
 					}
 
 			// [HMM LEARNING]
 			// save observations in training sequence for current block
-			train_matrix[c/blocksize][r/blocksize].at<int>(train_seq, train_obs) = temp_OBS;
+			train_matrix[c][r].at<int>(train_seq, train_obs) = temp_OBS;
+			
+			// [BAUM WELCH DEBUG INFO]
+			// if (r == DEBUG_R && c == DEBUG_C) {
+			//  	cout << "OBS"  << temp_OBS << "	" << train_matrix[c][r] << endl;
+			// }
 		}
 
 		// increment counters for Baum-Welch Training!
@@ -298,7 +331,16 @@ int main(int argc, char* argv[]) {
 
 				for (int r = 0; r < num_of_row; r++)
 					for (int c = 0; c < num_of_col; c++) {
-						hmm.train(train_matrix[c][r], TRAIN_MAX_ITER, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
+
+						// [BAUM WELCH DEBUG INFO 2]
+						if (r == DEBUG_R && c == DEBUG_R) {
+
+							hmm.printModel(trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
+							hmm.train(train_matrix[c][r], TRAIN_MAX_ITER, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
+							hmm.printModel(trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
+						}
+						else
+							hmm.train(train_matrix[c][r], TRAIN_MAX_ITER, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
 				}
 
 				// write 2d vector into file, all adjusted HMM will be saved!
@@ -321,6 +363,9 @@ int main(int argc, char* argv[]) {
 						file_init << ID << init_matrix[c][r];
 						file_trans << ID << trans_matrix[c][r];
 				}
+				file_emit.release();
+				file_init.release();
+				file_trans.release();
 				break;
 			}
 		}
