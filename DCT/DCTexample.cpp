@@ -121,13 +121,6 @@ int main(int argc, char* argv[]) {
 	
 	CvHMM hmm;							// needed for some static function calls
 
-	// just some hmm init data, will only be used if files with hmm information cannot be loaded
-	double TRGUESSdata[] = { 	9/10.0 , 1/10.0,
- 								3/10.0 , 7/10.0 };
-	double EMITGUESSdata[] = { 	8/20.0 , 5/20.0 , 3/20.0 , 1/20.0 , 2/20.0 , 1/20.0 ,
-  								1/20.0 , 3/20.0 , 2/20.0 , 5/20.0 , 4/20.0 , 5/20.0 };	
-	double INITGUESSdata[] = { 9/10.0 , 1/10.0 };
-
 	// create container, which will remember some observatins for a given block to enable viterbi,
 	// container with Mat elements describing the HMM for a given Block,
 	// and a Matrix containing training sequences for Baum Welch with ALL observations
@@ -154,15 +147,15 @@ int main(int argc, char* argv[]) {
 		
 		for (int j=0;j<num_of_row;j++){
 		
-			trans_matrix[i].push_back(Mat(2,2, CV_64F, TRGUESSdata));
-			emit_matrix[i].push_back(Mat(2,6, CV_64F, EMITGUESSdata));
-			init_matrix[i].push_back(Mat(1,2, CV_64F, INITGUESSdata));
+			trans_matrix[i].push_back(Mat(2,2, CV_64F, Scalar::all(0.0)));
+			emit_matrix[i].push_back(Mat(2,6, CV_64F, Scalar::all(0.0)));
+			init_matrix[i].push_back(Mat(1,2, CV_64F, Scalar::all(0.0)));
 			train_matrix[i].push_back(Mat(TRAIN_SEQ_MAX, TRAIN_OBS_MAX, CV_32S, Scalar::all(0)));
 		}
 	}
 
 	// [VECTOR INIT DEBUG INFO]
-	hmm.printModel(trans_matrix[DEBUG_C][DEBUG_R], emit_matrix[DEBUG_C][DEBUG_R], init_matrix[DEBUG_C][DEBUG_R]);
+	// hmm.printModel(trans_matrix[DEBUG_C][DEBUG_R], emit_matrix[DEBUG_C][DEBUG_R], init_matrix[DEBUG_C][DEBUG_R]);
 
 	// read 2d hmm vectors from file
 	ostringstream fname_emit_i;
@@ -188,7 +181,7 @@ int main(int argc, char* argv[]) {
 	file_trans.release();
 
 	// [VECTOR INIT DEBUG INFO2]
-	hmm.printModel(trans_matrix[DEBUG_C][DEBUG_R], emit_matrix[DEBUG_C][DEBUG_R], init_matrix[DEBUG_C][DEBUG_R]);
+	// hmm.printModel(trans_matrix[DEBUG_C][DEBUG_R], emit_matrix[DEBUG_C][DEBUG_R], init_matrix[DEBUG_C][DEBUG_R]);
 
 	while(1) { 
 		
@@ -333,14 +326,17 @@ int main(int argc, char* argv[]) {
 					for (int c = 0; c < num_of_col; c++) {
 
 						// [BAUM WELCH DEBUG INFO 2]
-						if (r == DEBUG_R && c == DEBUG_R) {
+						// if (r == DEBUG_R && c == DEBUG_R) {
+						
+						// 	hmm.printModel(trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
+						// 	cout << "------------------------------------------" << endl;
+						// 	hmm.train(train_matrix[c][r], TRAIN_MAX_ITER, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
+						// 	hmm.printModel(trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
+						// 	cout << "==========================================" << endl;
 
-							hmm.printModel(trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
-							hmm.train(train_matrix[c][r], TRAIN_MAX_ITER, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
-							hmm.printModel(trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
-						}
-						else
-							hmm.train(train_matrix[c][r], TRAIN_MAX_ITER, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
+						// }
+						// else
+						 	hmm.train(train_matrix[c][r], TRAIN_MAX_ITER, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
 				}
 
 				// write 2d vector into file, all adjusted HMM will be saved!
