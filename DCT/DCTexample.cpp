@@ -302,11 +302,11 @@ int main(int argc, char* argv[]) {
 					}
 
 			// save the state in the HMM, current state gets init-prob. 1 in HMM, other zero
-			init_matrix[c][r].at<double>( 0, estates.at<int>(0,estates.cols-1) ) = 1;
-			init_matrix[c][r].at<double>( 0, (estates.at<int>(0,estates.cols-1)+1)%2 ) = 0;
+			// init_matrix[c][r].at<double>( 0, estates.at<int>(0,estates.cols-1) ) = 1;
+			// init_matrix[c][r].at<double>( 0, (estates.at<int>(0,estates.cols-1)+1)%2 ) = 0;
 			// [INIT STATE DEBUG INFO]
-			cout << "Current State: " << estates.at<int>(0,estates.cols-1) << endl;
-			hmm.printModel(trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
+			// cout << "Current State: " << estates.at<int>(0,estates.cols-1) << endl;
+			// hmm.printModel(trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
 
 			// [HMM LEARNING]
 			// save observations in training sequence for current block
