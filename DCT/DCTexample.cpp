@@ -301,10 +301,17 @@ int main(int argc, char* argv[]) {
 						output_img.at<uint8_t>((r*blocksize)+i, (c*blocksize)+j) = BLACK;
 					}
 
+			// save the state in the HMM, current state gets init-prob. 1 in HMM, other zero
+			init_matrix[c][r].at<double>( 0, estates.at<int>(0,estates.cols-1) ) = 1;
+			init_matrix[c][r].at<double>( 0, (estates.at<int>(0,estates.cols-1)+1)%2 ) = 0;
+			// [INIT STATE DEBUG INFO]
+			cout << "Current State: " << estates.at<int>(0,estates.cols-1) << endl;
+			hmm.printModel(trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
+
 			// [HMM LEARNING]
 			// save observations in training sequence for current block
 			train_matrix[c][r].at<int>(train_seq, train_obs) = temp_OBS;
-			
+
 			// [BAUM WELCH DEBUG INFO]
 			// if (r == DEBUG_R && c == DEBUG_C) {
 			//  	cout << "OBS"  << temp_OBS << "	" << train_matrix[c][r] << endl;
