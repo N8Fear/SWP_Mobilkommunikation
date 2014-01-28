@@ -60,18 +60,18 @@ using namespace gpu;
 #define WHITY_THESHOLD 170	// threshold, every AC pixel above threshold is whity!
 #define WHITY_MAX 4			// number of whities, which are required to set block as foreground
 
-#define TIME_FILTER_ON 1	// activates the time filter, which works based on the last states
+#define TIME_FILTER_ON 0	// activates the time filter, which works based on the last states
 #define FILTER_STATE_MAX 25	// describes how many last states are used for time based filtering
 
 #define TRAIN_OBS_MAX 25	// used by Baum Welch (25 frames = 1 second)
 #define TRAIN_SEQ_MAX 10 	// used by Baum Welch (10 seconds in total)
-#define TRAIN_MAX_ITER 3	// Baum Welch stop criteria (max_int = 2147483647)
-#define TRAIN_ITERATIVE 0	// set to one, if learning should happen on the fly, 0 for output to files
+#define TRAIN_MAX_ITER 100	// Baum Welch stop criteria (max_int = 2147483647)
+#define TRAIN_ITERATIVE 1	// set to one, if learning should happen on the fly, 0 for output to files
 
 #define DEBUG_R 15			// block which is used for debug printing
 #define DEBUG_C 20			// block which is used for debug printing
 
-#define COMPETING_MODELS 0	// set to 1, if deterministic model and HMM should compete
+#define COMPETING_MODELS 1	// set to 1, if deterministic model and HMM should compete
 
 
 int main(int argc, char* argv[]) {
@@ -323,7 +323,8 @@ int main(int argc, char* argv[]) {
 				
 				// determenistic model VS HMM: mark the block BLACK, if hmm-state and det-state are the same
 				// HMM learns the background, so if they differ, sth has appeared in the FG and should be NOT filtered
-				if (current_hmm_state == det_state)
+				if (current_hmm_state == det_state || current_hmm_state == 1 && det_state == 0)
+				// if (current_hmm_state == det_state)
 					for (int i = 0; i<blocksize; ++i)
 					for (int j = 0; j<blocksize; ++j) {
 						output_img.at<uint8_t>((r*blocksize) + i, (c*blocksize) + j) = BLACK;
@@ -423,8 +424,10 @@ int main(int argc, char* argv[]) {
 					break;
 				}
 
-				// begin collecting new training sequences
+				// begin collecting new trainining sequences
 				train_seq = 0;
+
+				cout << "Updating HMM..." << endl;
 			}
 		}
 
