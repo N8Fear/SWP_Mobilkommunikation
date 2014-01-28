@@ -10,5 +10,5 @@ TARGET_LINK_LIBRARIES(SPTrack sp_dct)
 TARGET_LINK_LIBRARIES(SPTrack sp_player)
 TARGET_LINK_LIBRARIES(SPTrack sp_hmm)
 
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} -ggdb -Wall")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -ggdb -Wall")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} -ggdb -Wall -O2 -march=native")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -ggdb -Wall -O2 -march=native")
