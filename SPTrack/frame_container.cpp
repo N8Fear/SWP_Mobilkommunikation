@@ -11,12 +11,14 @@ Mat *frame_container::get_current()
 
 Mat *frame_container::process_frame(VideoCapture *cap)
 {
-	current = &container[cur++];
-	cur = cur%25;
+	current = &container[cur];
+	output = current;//->clone();
 	if (!cap->read(*current)) {
 		cerr << "Error reading frame from stream" << endl;
 		exit(0);
 	}
+	cur = (++cur)%25;
+
 	return current;
 }
 
