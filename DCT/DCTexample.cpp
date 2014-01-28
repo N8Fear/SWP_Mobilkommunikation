@@ -60,16 +60,18 @@ using namespace gpu;
 #define WHITY_THESHOLD 170	// threshold, every AC pixel above threshold is whity!
 #define WHITY_MAX 4			// number of whities, which are required to set block as foreground
 
-#define STATE_MAX 25 		// describes how many last states are used for time based filtering
+#define TIME_FILTER_ON 1	// activates the time filter, which works based on the last states
+#define FILTER_STATE_MAX 25	// describes how many last states are used for time based filtering
 
 #define TRAIN_OBS_MAX 25	// used by Baum Welch (25 frames = 1 second)
-#define TRAIN_SEQ_MAX 60 	// used by Baum Welch (60 seconds in total)
+#define TRAIN_SEQ_MAX 10 	// used by Baum Welch (10 seconds in total)
 #define TRAIN_MAX_ITER 3	// Baum Welch stop criteria (max_int = 2147483647)
+#define TRAIN_ITERATIVE 0	// set to one, if learning should happen on the fly, 0 for output to files
 
 #define DEBUG_R 15			// block which is used for debug printing
 #define DEBUG_C 20			// block which is used for debug printing
 
-#define COMPETING_MODELS 1	// set to 1, if determenistic model and HMM should compete
+#define COMPETING_MODELS 0	// set to 1, if deterministic model and HMM should compete
 
 
 int main(int argc, char* argv[]) {
@@ -148,7 +150,7 @@ int main(int argc, char* argv[]) {
 	int num_of_row = (heigth + heigth_offset) / blocksize;
 
 	obs_matrix.resize(num_of_col, vector <deque<int> >(num_of_row, deque<int>(VIT_OBS_MAX, OBS1)));
-	state_matrix.resize(num_of_col, vector <deque<int> >(num_of_row, deque<int>(STATE_MAX, 0)));
+	state_matrix.resize(num_of_col, vector <deque<int> >(num_of_row, deque<int>(FILTER_STATE_MAX, 0)));
 
 	for (int i = 0; i<num_of_col; i++) {
 
@@ -257,19 +259,14 @@ int main(int argc, char* argv[]) {
 			// will contain the current observation ID (OBS is 2D right now)
 			int temp_OBS = -1;
 
-			// contains the assumend state (determenistic, will be compared with HMM output)
-			int det_state = 0;
-
 			// division by 8 ensures uint_8 range of DC, encode DC in OBS
 			double dc = block.at<double>(0, 0) / 8;
 
 			if (dc < DC_BLACK_THRESHOLD)
 				temp_OBS = OBS1;
 
-			else if (dc > DC_WHITE_THRESHOLD){
+			else if (dc > DC_WHITE_THRESHOLD)
 				temp_OBS = OBS5;
-				det_state = 1; // white => FG
-			}
 
 			else 
 				temp_OBS = OBS3;
@@ -292,13 +289,8 @@ int main(int argc, char* argv[]) {
 			standard_deviation = sqrt(standard_deviation / 63);
 
 			// with whity or standard deviation
-			if ((standard_deviation > AC_STDDEV) || (whity_counter > WHITY_MAX)){
-
-				// grey and edges => FG
-				if (temp_OBS >= OBS3) det_state = 1;
-
+			if ((standard_deviation > AC_STDDEV) || (whity_counter > WHITY_MAX))
 				temp_OBS += AC_FLAT_2_EDGE;
-			}
 
 			// remember last VIT_OBS_MAX many observations, so we can perform viterbi to deduce current state
 			obs_matrix[c][r].pop_front();
@@ -320,7 +312,11 @@ int main(int argc, char* argv[]) {
 			}
 			cv::Mat estates;
 			hmm.viterbi(viterbi_seq, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r], estates);
+			
+			// get current states for HMM and deterministic model
 			int current_hmm_state = estates.at<int>(0, estates.cols - 1);
+			int det_state = 0;
+			if (temp_OBS >= OBS4) det_state = 1;
 
 			// remove background based on filter-rule
 			if (COMPETING_MODELS == 1){
@@ -351,19 +347,22 @@ int main(int argc, char* argv[]) {
 			//  	cout << "OBS"  << temp_OBS << "	" << train_matrix[c][r] << endl;
 			// }
 
-			state_matrix[c][r].pop_front();
-			state_matrix[c][r].push_back(current_hmm_state);
+			// deterministic time filter based on last states
+			if (TIME_FILTER_ON == 1){
+				state_matrix[c][r].pop_front();
+				state_matrix[c][r].push_back(current_hmm_state);
 
-			for (int k = 0; k<state_matrix[c][r].size(); k++){
+				for (int k = 0; k<state_matrix[c][r].size(); k++){
 
-				if (state_matrix[c][r][k] == 0) break;
+					if (state_matrix[c][r][k] == 0) break;
 
-				if (state_matrix[c][r].size() - 1 == k){
+					if (state_matrix[c][r].size() - 1 == k){
 
-					// mark black, as no movement
-					for (int i = 0; i<blocksize; ++i)
-					for (int j = 0; j<blocksize; ++j) {
-						output_img.at<uint8_t>((r*blocksize) + i, (c*blocksize) + j) = BLACK;
+						// mark black, as no movement
+						for (int i = 0; i<blocksize; ++i)
+						for (int j = 0; j<blocksize; ++j) {
+							output_img.at<uint8_t>((r*blocksize) + i, (c*blocksize) + j) = BLACK;
+						}
 					}
 				}
 			}
@@ -397,30 +396,35 @@ int main(int argc, char* argv[]) {
 					hmm.train(train_matrix[c][r], TRAIN_MAX_ITER, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
 				}
 
-				// write 2d vector into file, all adjusted HMM will be saved!
-				ostringstream fname_emit_o;
-				ostringstream fname_init_o;
-				ostringstream fname_trans_o;
-				fname_emit_o << dir_output << "emit2D.yml";
-				fname_init_o << dir_output << "init2D.yml";
-				fname_trans_o << dir_output << "trans2D.yml";
-				FileStorage file_emit(fname_emit_o.str(), FileStorage::WRITE);
-				FileStorage file_init(fname_init_o.str(), FileStorage::WRITE);
-				FileStorage file_trans(fname_trans_o.str(), FileStorage::WRITE);
-				for (int r = 0; r < num_of_row; r++)
-				for (int c = 0; c < num_of_col; c++) {
+				if (TRAIN_ITERATIVE == 0){
+					// write 2d vector into file, all adjusted HMM will be saved!
+					ostringstream fname_emit_o;
+					ostringstream fname_init_o;
+					ostringstream fname_trans_o;
+					fname_emit_o << dir_output << "emit2D.yml";
+					fname_init_o << dir_output << "init2D.yml";
+					fname_trans_o << dir_output << "trans2D.yml";
+					FileStorage file_emit(fname_emit_o.str(), FileStorage::WRITE);
+					FileStorage file_init(fname_init_o.str(), FileStorage::WRITE);
+					FileStorage file_trans(fname_trans_o.str(), FileStorage::WRITE);
+					for (int r = 0; r < num_of_row; r++)
+					for (int c = 0; c < num_of_col; c++) {
 
-					ostringstream id_stream;
-					id_stream << "row_" << r << "-col_" << c;
-					string ID = id_stream.str();
-					file_emit << ID << emit_matrix[c][r];
-					file_init << ID << init_matrix[c][r];
-					file_trans << ID << trans_matrix[c][r];
+						ostringstream id_stream;
+						id_stream << "row_" << r << "-col_" << c;
+						string ID = id_stream.str();
+						file_emit << ID << emit_matrix[c][r];
+						file_init << ID << init_matrix[c][r];
+						file_trans << ID << trans_matrix[c][r];
+					}
+					file_emit.release();
+					file_init.release();
+					file_trans.release();
+					break;
 				}
-				file_emit.release();
-				file_init.release();
-				file_trans.release();
-				break;
+
+				// begin collecting new training sequences
+				train_seq = 0;
 			}
 		}
 
