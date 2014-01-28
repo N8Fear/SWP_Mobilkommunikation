@@ -15,7 +15,7 @@ int sp_dct::dct_init(Dimensions &dim)
 	width_offset = dim.width_offset;
 	// move to SPTrack
 }
-Mat sp_dct::exec_dct(Mat input)
+Mat sp_dct::dct_exec(Mat input)
 {
 	Mat dct_img;
 	// create gray snapshot of the current frame (RGB -> GRAY)

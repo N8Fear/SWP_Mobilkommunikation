@@ -13,7 +13,7 @@ class sp_dct {
 	public:
 	//	enum DCT_Trend get_trend();
 		sp_dct();
-		cv::Mat exec_dct(cv::Mat input);
+		cv::Mat dct_exec(cv::Mat input);
 		int dct_init(Dimensions &dim);
 	private:
 		int height_offset, width_offset;

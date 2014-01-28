@@ -25,13 +25,14 @@ int SPTrack::init_loop(char *path)
 	player= new sp_player("Player");
 	this->init_dimensions(cap);
 
-	//hmm= new sp_hmm();
-	//hmm->hmm_init(dim);
-
 	run_dct = new sp_dct();
 	run_dct->dct_init(dim);
 
+//	run_hmm= new sp_hmm();
+//	run_hmm->hmm_init(dim);
+
 	memset(histogram, 0, 256);
+
 	return 0;
 }
 
@@ -57,7 +58,8 @@ int SPTrack::play_stream()
 		}
 
 		frame_cnt.process_frame(&cap);
-		*frame_cnt.output = (run_dct->exec_dct(*frame_cnt.get_current())).clone();
+		*frame_cnt.output = (run_dct->dct_exec(*frame_cnt.get_current())).clone();
+		//*frame_cnt.output = (run_hmm->hmm_exec(*frame_cnt.output)).clone();
 		gen_histogram(*frame_cnt.get_current());
 		player->update_player(*frame_cnt.output);
 
