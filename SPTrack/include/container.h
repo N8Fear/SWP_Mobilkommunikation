@@ -19,3 +19,7 @@ class frame_container{
 		cv::Mat *process_frame(cv::VideoCapture *cap);
 		cv::Mat *output;
 };
+
+struct Dimensions{
+		int width, height, width_offset, height_offset;
+};

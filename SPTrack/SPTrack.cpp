@@ -28,7 +28,7 @@ int SPTrack::init_loop(char *path)
 //	sp_hmm *hmm= new sp_hmm();
 
 	run_dct = new sp_dct();
-	run_dct->init_dct(height_offset, width_offset);
+	run_dct->init_dct(dim);
 
 	memset(histogram, 0, 256);
 	return 0;
@@ -37,10 +37,10 @@ int SPTrack::init_loop(char *path)
 int SPTrack::init_dimensions(cv::VideoCapture &cap)
 {
 	int mod;
-	width = cap.get(CV_CAP_PROP_FRAME_WIDTH);
-	height = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
-	((mod=(width % 8))== 0) ? width_offset = 0: width_offset = BLOCKSIZE - mod;
-	((mod=(height % 8))== 0) ? height_offset = 0: height_offset = BLOCKSIZE -mod;
+	dim.width = cap.get(CV_CAP_PROP_FRAME_WIDTH);
+	dim.height = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
+	((mod=(dim.width % 8))== 0) ? dim.width_offset = 0: dim.width_offset = BLOCKSIZE - mod;
+	((mod=(dim.height % 8))== 0) ? dim.height_offset = 0: dim.height_offset = BLOCKSIZE -mod;
 	return 0;
 }
 

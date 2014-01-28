@@ -9,10 +9,10 @@ sp_dct::sp_dct()
 	width_offset = 0;
 }
 
-int sp_dct::init_dct(int h_o, int w_o)
+int sp_dct::init_dct(Dimensions &dim)
 {
-	height_offset = h_o;
-	width_offset = w_o;
+	height_offset = dim.height_offset;
+	width_offset = dim.width_offset;
 	// move to SPTrack
 }
 Mat sp_dct::exec_dct(Mat input)

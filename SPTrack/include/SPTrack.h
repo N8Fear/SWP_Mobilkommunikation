@@ -11,7 +11,7 @@
 
 //#include <time.h>
 
-#include "frame_container.h"
+#include "container.h"
 #include "sp_player.h"
 #include "sp_dct.h"
 #include "sp_hmm.h"
@@ -26,21 +26,24 @@
 #define DEBUG_R 0
 #define DEBUG_C 5
 
+
 class SPTrack{
 	private:
+		cv::VideoCapture cap;
 		long skip_sec;
-		int width, height, width_offset, height_offset;
-		int init_loop(char *path);
-		int parse_cl_param(int argc, char *argv[]);
+		long long int histogram[256];
+		Dimensions dim;
 		sp_dct *run_dct;
 		sp_player *player;
-		long long int histogram[256];
-		void gen_histogram(cv::Mat);
-		cv::VideoCapture cap;
+
 		int init_dimensions(cv::VideoCapture &cap);
+		int init_loop(char *path);
+		int parse_cl_param(int argc, char *argv[]);
+		void gen_histogram(cv::Mat);
 
 	public:
 		int play_stream();
 		SPTrack(int argc, char *argv[]);
 };
+
 
