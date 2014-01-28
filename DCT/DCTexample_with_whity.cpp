@@ -54,6 +54,8 @@ using namespace gpu;
 
 #define VIT_OBS_MAX 3 		// describes how many last observation are used for viterbi
 
+#define STATE_MAX 25 		// describes how many last states are used for time based filtering
+
 #define TRAIN_OBS_MAX 25	// used by Baum Welch (25 frames = 1 second)
 #define TRAIN_SEQ_MAX 15 	// used by Baum Welch (15 seconds in total)
 #define TRAIN_MAX_ITER 3	// Baum Welch stop criteria (max_int = 2147483647)
@@ -125,6 +127,7 @@ int main(int argc, char* argv[]) {
 	// container with Mat elements describing the HMM for a given Block,
 	// and a Matrix containing training sequences for Baum Welch with ALL observations
 	vector < vector < deque<int> > > obs_matrix;
+	vector < vector < deque<int> > > state_matrix;
 	vector < vector < Mat > > trans_matrix;
 	vector < vector < Mat > > emit_matrix;
 	vector < vector < Mat > > init_matrix;
@@ -137,15 +140,16 @@ int main(int argc, char* argv[]) {
 	int num_of_row = (heigth + heigth_offset) / blocksize;
 
 	obs_matrix.resize(num_of_col, vector <deque<int> >(num_of_row, deque<int>(VIT_OBS_MAX, OBS1)));
+	state_matrix.resize(num_of_col, vector <deque<int> >(num_of_row, deque<int>(STATE_MAX, 0)));
 
-	for (int i = 0; i < num_of_col; i++) {
+	for (int i = 0; i<num_of_col; i++) {
 
 		trans_matrix.push_back(vector<Mat>());
 		emit_matrix.push_back(vector<Mat>());
 		init_matrix.push_back(vector<Mat>());
 		train_matrix.push_back(vector<Mat>());
 
-		for (int j = 0; j < num_of_row; j++){
+		for (int j = 0; j<num_of_row; j++){
 
 			trans_matrix[i].push_back(Mat(2, 2, CV_64F, Scalar::all(0.0)));
 			emit_matrix[i].push_back(Mat(2, 6, CV_64F, Scalar::all(0.0)));
@@ -189,7 +193,7 @@ int main(int argc, char* argv[]) {
 		Mat frame;
 		if (skip > 0){
 			short fps = cap.get(CV_CAP_PROP_FPS);
-			for (int i = 0; i < skip*fps; i++)
+			for (int i = 0; i< skip*fps; i++)
 				cap.read(frame);
 			skip = 0;
 		}
@@ -248,7 +252,7 @@ int main(int argc, char* argv[]) {
 			// division by 8 ensures uint_8 range of DC, encode DC in OBS
 			double dc = block.at<double>(0, 0) / 8;
 
-			if (dc < 70)
+			if (dc < 50)
 				temp_OBS = OBS1;
 
 			else if (dc > 190)
@@ -279,9 +283,10 @@ int main(int argc, char* argv[]) {
 			}
 			standard_deviation = sqrt(standard_deviation / 63);
 
-
+			//with whity
 			if ((standard_deviation > AC_STDDEV) || (whity_counter > 5))
-			//if ((standard_deviation > AC_STDDEV))
+			//without whity
+				//if (standard_deviation > AC_STDDEV)
 				temp_OBS += AC_FLAT_2_EDGE;
 
 			// remember last VIT_OBS_MAX many observations, so we can perform viterbi to deduce current state
@@ -299,7 +304,7 @@ int main(int argc, char* argv[]) {
 
 			// observation recognition done, now use viterbi to get most propable state
 			Mat viterbi_seq = Mat(1, VIT_OBS_MAX, CV_32S);
-			for (int i = 0; i < obs_matrix[c][r].size(); ++i){
+			for (int i = 0; i<obs_matrix[c][r].size(); ++i){
 				viterbi_seq.at<int>(0, i) = obs_matrix[c][r][i];
 			}
 			cv::Mat estates;
@@ -307,14 +312,14 @@ int main(int argc, char* argv[]) {
 
 			// mark the block BLACK, if state 0 (background)
 			if (estates.at<int>(0, estates.cols - 1) == 0)
-			for (int i = 0; i < blocksize; ++i)
-			for (int j = 0; j < blocksize; ++j) {
+			for (int i = 0; i<blocksize; ++i)
+			for (int j = 0; j<blocksize; ++j) {
 				output_img.at<uint8_t>((r*blocksize) + i, (c*blocksize) + j) = BLACK;
 			}
 
 			// save the state in the HMM, current state gets init-prob. 1 in HMM, other zero
-			// init_matrix[c][r].at<double>( 0, estates.at<int>(0,estates.cols-1) ) = 1;
-			// init_matrix[c][r].at<double>( 0, (estates.at<int>(0,estates.cols-1)+1)%2 ) = 0;
+			//init_matrix[c][r].at<double>( 0, estates.at<int>(0,estates.cols-1) ) = 1;
+			//init_matrix[c][r].at<double>( 0, (estates.at<int>(0,estates.cols-1)+1)%2 ) = 0;
 			// [INIT STATE DEBUG INFO]
 			// cout << "Current State: " << estates.at<int>(0,estates.cols-1) << endl;
 			// hmm.printModel(trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
@@ -327,6 +332,23 @@ int main(int argc, char* argv[]) {
 			// if (r == DEBUG_R && c == DEBUG_C) {
 			//  	cout << "OBS"  << temp_OBS << "	" << train_matrix[c][r] << endl;
 			// }
+
+			state_matrix[c][r].pop_front();
+			state_matrix[c][r].push_back(estates.at<int>(0, estates.cols - 1));
+
+			for (int k = 0; k<state_matrix[c][r].size(); k++){
+
+				if (state_matrix[c][r][k] == 0) break;
+
+				if (state_matrix[c][r].size() - 1 == k){
+
+					// mark black, as no movement
+					for (int i = 0; i<blocksize; ++i)
+					for (int j = 0; j<blocksize; ++j) {
+						output_img.at<uint8_t>((r*blocksize) + i, (c*blocksize) + j) = BLACK;
+					}
+				}
+			}
 		}
 
 		// increment counters for Baum-Welch Training!
