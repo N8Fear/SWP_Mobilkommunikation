@@ -63,12 +63,13 @@ using namespace gpu;
 #define STATE_MAX 25 		// describes how many last states are used for time based filtering
 
 #define TRAIN_OBS_MAX 25	// used by Baum Welch (25 frames = 1 second)
-#define TRAIN_SEQ_MAX 15 	// used by Baum Welch (15 seconds in total)
+#define TRAIN_SEQ_MAX 60 	// used by Baum Welch (60 seconds in total)
 #define TRAIN_MAX_ITER 3	// Baum Welch stop criteria (max_int = 2147483647)
 
 #define DEBUG_R 15			// block which is used for debug printing
 #define DEBUG_C 20			// block which is used for debug printing
 
+#define COMPETING_MODELS 1	// set to 1, if determenistic model and HMM should compete
 
 
 int main(int argc, char* argv[]) {
@@ -256,17 +257,23 @@ int main(int argc, char* argv[]) {
 			// will contain the current observation ID (OBS is 2D right now)
 			int temp_OBS = -1;
 
+			// contains the assumend state (determenistic, will be compared with HMM output)
+			int det_state = 0;
+
 			// division by 8 ensures uint_8 range of DC, encode DC in OBS
 			double dc = block.at<double>(0, 0) / 8;
 
 			if (dc < DC_BLACK_THRESHOLD)
 				temp_OBS = OBS1;
 
-			else if (dc > DC_WHITE_THRESHOLD)
+			else if (dc > DC_WHITE_THRESHOLD){
 				temp_OBS = OBS5;
+				det_state = 1; // white => FG
+			}
 
-			else
+			else 
 				temp_OBS = OBS3;
+				
 
 			// check standard deviation, encode AC-std-dev and whities in OBS
 			double whity_counter = 0;
@@ -284,11 +291,14 @@ int main(int argc, char* argv[]) {
 			}
 			standard_deviation = sqrt(standard_deviation / 63);
 
-			// with whity
-			if ((standard_deviation > AC_STDDEV) || (whity_counter > WHITY_MAX))
-			// without whity
-				// if (standard_deviation > AC_STDDEV)
+			// with whity or standard deviation
+			if ((standard_deviation > AC_STDDEV) || (whity_counter > WHITY_MAX)){
+
+				// grey and edges => FG
+				if (temp_OBS >= OBS3) det_state = 1;
+
 				temp_OBS += AC_FLAT_2_EDGE;
+			}
 
 			// remember last VIT_OBS_MAX many observations, so we can perform viterbi to deduce current state
 			obs_matrix[c][r].pop_front();
@@ -310,20 +320,27 @@ int main(int argc, char* argv[]) {
 			}
 			cv::Mat estates;
 			hmm.viterbi(viterbi_seq, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r], estates);
+			int current_hmm_state = estates.at<int>(0, estates.cols - 1);
 
-			// mark the block BLACK, if state 0 (background)
-			if (estates.at<int>(0, estates.cols - 1) == 0)
-			for (int i = 0; i<blocksize; ++i)
-			for (int j = 0; j<blocksize; ++j) {
-				output_img.at<uint8_t>((r*blocksize) + i, (c*blocksize) + j) = BLACK;
+			// remove background based on filter-rule
+			if (COMPETING_MODELS == 1){
+				
+				// determenistic model VS HMM: mark the block BLACK, if hmm-state and det-state are the same
+				// HMM learns the background, so if they differ, sth has appeared in the FG and should be NOT filtered
+				if (current_hmm_state == det_state)
+					for (int i = 0; i<blocksize; ++i)
+					for (int j = 0; j<blocksize; ++j) {
+						output_img.at<uint8_t>((r*blocksize) + i, (c*blocksize) + j) = BLACK;
+				}
 			}
-
-			// save the state in the HMM, current state gets init-prob. 1 in HMM, other zero
-			//init_matrix[c][r].at<double>( 0, estates.at<int>(0,estates.cols-1) ) = 1;
-			//init_matrix[c][r].at<double>( 0, (estates.at<int>(0,estates.cols-1)+1)%2 ) = 0;
-			// [INIT STATE DEBUG INFO]
-			// cout << "Current State: " << estates.at<int>(0,estates.cols-1) << endl;
-			// hmm.printModel(trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
+			else {
+				// filter based on the HMM: mark the block BLACK, if state 0 (background)
+				if (current_hmm_state == 0)
+				for (int i = 0; i<blocksize; ++i)
+				for (int j = 0; j<blocksize; ++j) {
+					output_img.at<uint8_t>((r*blocksize) + i, (c*blocksize) + j) = BLACK;
+				}
+			}
 
 			// [HMM LEARNING]
 			// save observations in training sequence for current block
@@ -335,7 +352,7 @@ int main(int argc, char* argv[]) {
 			// }
 
 			state_matrix[c][r].pop_front();
-			state_matrix[c][r].push_back(estates.at<int>(0, estates.cols - 1));
+			state_matrix[c][r].push_back(current_hmm_state);
 
 			for (int k = 0; k<state_matrix[c][r].size(); k++){
 
