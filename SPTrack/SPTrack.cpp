@@ -23,13 +23,24 @@ int SPTrack::init_loop(char *path)
 	/* Initialization of sub processes and stuff: */
 
 	player= new sp_player("Player");
+	this->init_dimensions(cap);
 
 //	sp_hmm *hmm= new sp_hmm();
 
 	run_dct = new sp_dct();
-	run_dct->init_dct(&cap);
+	run_dct->init_dct(height_offset, width_offset);
 
 	memset(histogram, 0, 256);
+	return 0;
+}
+
+int SPTrack::init_dimensions(cv::VideoCapture &cap)
+{
+	int mod;
+	width = cap.get(CV_CAP_PROP_FRAME_WIDTH);
+	height = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
+	((mod=(width % 8))== 0) ? width_offset = 0: width_offset = BLOCKSIZE - mod;
+	((mod=(height % 8))== 0) ? height_offset = 0: height_offset = BLOCKSIZE -mod;
 	return 0;
 }
 

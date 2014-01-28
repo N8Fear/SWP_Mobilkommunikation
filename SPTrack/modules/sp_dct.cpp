@@ -9,14 +9,11 @@ sp_dct::sp_dct()
 	width_offset = 0;
 }
 
-int sp_dct::init_dct(cv::VideoCapture *cap)
+int sp_dct::init_dct(int h_o, int w_o)
 {
-	int mod;
-	int width = cap->get(CV_CAP_PROP_FRAME_WIDTH);
-	int height = cap->get(CV_CAP_PROP_FRAME_HEIGHT);
-	((mod=(width % 8))== 0) ? width_offset = 0: width_offset = BLOCKSIZE - mod;
-	((mod=(height % 8))== 0) ? height_offset = 0: height_offset = BLOCKSIZE -mod;
-	return 0;
+	height_offset = h_o;
+	width_offset = w_o;
+	// move to SPTrack
 }
 Mat sp_dct::exec_dct(Mat input)
 {
