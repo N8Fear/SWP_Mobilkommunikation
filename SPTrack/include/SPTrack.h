@@ -34,6 +34,7 @@ class SPTrack{
 		long long int histogram[256];
 		Dimensions dim;
 		sp_dct *run_dct;
+		sp_hmm *run_hmm;
 		sp_player *player;
 
 		int init_dimensions(cv::VideoCapture &cap);
