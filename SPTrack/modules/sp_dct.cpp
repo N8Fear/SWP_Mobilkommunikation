@@ -9,7 +9,7 @@ sp_dct::sp_dct()
 	width_offset = 0;
 }
 
-int sp_dct::init_dct(Dimensions &dim)
+int sp_dct::dct_init(Dimensions &dim)
 {
 	height_offset = dim.height_offset;
 	width_offset = dim.width_offset;

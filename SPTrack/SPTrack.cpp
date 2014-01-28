@@ -25,10 +25,11 @@ int SPTrack::init_loop(char *path)
 	player= new sp_player("Player");
 	this->init_dimensions(cap);
 
-//	sp_hmm *hmm= new sp_hmm();
+	//hmm= new sp_hmm();
+	//hmm->hmm_init(dim);
 
 	run_dct = new sp_dct();
-	run_dct->init_dct(dim);
+	run_dct->dct_init(dim);
 
 	memset(histogram, 0, 256);
 	return 0;

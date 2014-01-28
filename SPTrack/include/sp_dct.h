@@ -14,7 +14,7 @@ class sp_dct {
 	//	enum DCT_Trend get_trend();
 		sp_dct();
 		cv::Mat exec_dct(cv::Mat input);
-		int init_dct(Dimensions &dim);
+		int dct_init(Dimensions &dim);
 	private:
 		int height_offset, width_offset;
 		cv::Mat DCT_store[5];
