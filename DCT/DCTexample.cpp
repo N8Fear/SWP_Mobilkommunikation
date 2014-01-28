@@ -66,7 +66,7 @@ using namespace gpu;
 #define TRAIN_OBS_MAX 25	// used by Baum Welch (25 frames = 1 second)
 #define TRAIN_SEQ_MAX 10 	// used by Baum Welch (10 seconds in total)
 #define TRAIN_MAX_ITER 100	// Baum Welch stop criteria (max_int = 2147483647)
-#define TRAIN_ITERATIVE 1	// set to one, if learning should happen on the fly, 0 for output to files
+#define TRAIN_ITERATIVE 1	// 1 learning should happen on the fly, 0 for no live updates, output to files on escape
 
 #define DEBUG_R 15			// block which is used for debug printing
 #define DEBUG_C 20			// block which is used for debug printing
@@ -323,6 +323,7 @@ int main(int argc, char* argv[]) {
 				
 				// determenistic model VS HMM: mark the block BLACK, if hmm-state and det-state are the same
 				// HMM learns the background, so if they differ, sth has appeared in the FG and should be NOT filtered
+				// TODO: create best if statement... 
 				if (current_hmm_state == det_state || current_hmm_state == 1 && det_state == 0)
 				// if (current_hmm_state == det_state)
 					for (int i = 0; i<blocksize; ++i)
@@ -397,32 +398,8 @@ int main(int argc, char* argv[]) {
 					hmm.train(train_matrix[c][r], TRAIN_MAX_ITER, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
 				}
 
-				if (TRAIN_ITERATIVE == 0){
-					// write 2d vector into file, all adjusted HMM will be saved!
-					ostringstream fname_emit_o;
-					ostringstream fname_init_o;
-					ostringstream fname_trans_o;
-					fname_emit_o << dir_output << "emit2D.yml";
-					fname_init_o << dir_output << "init2D.yml";
-					fname_trans_o << dir_output << "trans2D.yml";
-					FileStorage file_emit(fname_emit_o.str(), FileStorage::WRITE);
-					FileStorage file_init(fname_init_o.str(), FileStorage::WRITE);
-					FileStorage file_trans(fname_trans_o.str(), FileStorage::WRITE);
-					for (int r = 0; r < num_of_row; r++)
-					for (int c = 0; c < num_of_col; c++) {
-
-						ostringstream id_stream;
-						id_stream << "row_" << r << "-col_" << c;
-						string ID = id_stream.str();
-						file_emit << ID << emit_matrix[c][r];
-						file_init << ID << init_matrix[c][r];
-						file_trans << ID << trans_matrix[c][r];
-					}
-					file_emit.release();
-					file_init.release();
-					file_trans.release();
+				if (TRAIN_ITERATIVE == 0)
 					break;
-				}
 
 				// begin collecting new trainining sequences
 				train_seq = 0;
@@ -437,6 +414,31 @@ int main(int argc, char* argv[]) {
 
 		// wait for 'esc' key press for 30 ms -- exit on 'esc' key
 		if (waitKey(30) == 27) {
+
+			// write 2d vector into file, all adjusted HMM will be saved!
+			ostringstream fname_emit_o;
+			ostringstream fname_init_o;
+			ostringstream fname_trans_o;
+			fname_emit_o << dir_output << "emit2D.yml";
+			fname_init_o << dir_output << "init2D.yml";
+			fname_trans_o << dir_output << "trans2D.yml";
+			FileStorage file_emit(fname_emit_o.str(), FileStorage::WRITE);
+			FileStorage file_init(fname_init_o.str(), FileStorage::WRITE);
+			FileStorage file_trans(fname_trans_o.str(), FileStorage::WRITE);
+			for (int r = 0; r < num_of_row; r++)
+			for (int c = 0; c < num_of_col; c++) {
+
+				ostringstream id_stream;
+				id_stream << "row_" << r << "-col_" << c;
+				string ID = id_stream.str();
+				file_emit << ID << emit_matrix[c][r];
+				file_init << ID << init_matrix[c][r];
+				file_trans << ID << trans_matrix[c][r];
+			}
+			file_emit.release();
+			file_init.release();
+			file_trans.release();
+
 			break;
 		}
 	}
