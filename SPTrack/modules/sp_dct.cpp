@@ -40,6 +40,9 @@ Mat sp_dct::exec_dct(Mat input)
 			// For each block, split into planes, do dct,
 			// and merge back into the block
 			Mat block = dct_img(Rect(c, r, BLOCKSIZE, BLOCKSIZE));
+/*
+			// Support for multiple planes - seemingly not necessary for our
+			// case
 			vector<Mat> planes;
 			split(block, planes);
 			vector<Mat> outplanes(planes.size());
@@ -50,11 +53,13 @@ Mat sp_dct::exec_dct(Mat input)
 				dct(planes[k], outplanes[k]);
 			}
 			merge(outplanes, block);
-
+*/
+			dct(block, block);
 			// division by 8 ensures uint_8 range of DC
-			double dc = block.at<double>(0,0)/8;
+//			double dc = block.at<double>(0,0)/8;
 
 			// set one value for all pixels in block
+/*
 		for (int i=0; i<BLOCKSIZE; ++i){
 				for (int j=0; j<BLOCKSIZE; ++j) {
 
@@ -68,6 +73,7 @@ Mat sp_dct::exec_dct(Mat input)
 					}
 				}
 			 }
+*/
 		}
 
 	// matrice contains real / complex parts, filter them seperatly

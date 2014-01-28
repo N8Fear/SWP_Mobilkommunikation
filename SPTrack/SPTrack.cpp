@@ -51,7 +51,8 @@ int SPTrack::play_stream()
 
 		if(waitKey(30) == 27) {
 			for (int i=0; i<256; i++)
-				printf("%d;%llu;\n",i,histogram[i]);
+//				printf("%d;%llu;\n",i,histogram[i]);
+				;
 			break;
 		}
 	}
