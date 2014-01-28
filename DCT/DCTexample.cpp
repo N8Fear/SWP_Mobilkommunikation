@@ -268,32 +268,26 @@ int main(int argc, char* argv[]) {
 			else
 				temp_OBS = OBS3;
 
-			// check standard deviation, encode AC-std-dev in OBS
-
-
-			//whity
+			// check standard deviation, encode AC-std-dev and whities in OBS
 			double whity_counter = 0;
-
-
 			double standard_deviation = 0;
 			for (int i = 0; i < blocksize; ++i)
-			for (int j = 0; j<blocksize; ++j) {
+			for (int j = 0; j < blocksize; ++j) {
 
 				if (!((i == 0) && (j == 0))){ //EXCLUDE DC
 
-					standard_deviation +=
-						pow(block.at<double>(i, j), 2);
+					standard_deviation += pow(block.at<double>(i, j), 2);
+					
+					if (block.at<double>(i, j) / 8 + dc > WHITY_THESHOLD)
+						whity_counter++;
 				}
-				if (block.at<double>(i, j) / 8 + dc > WHITY_THESHOLD)
-					whity_counter++;
-
 			}
 			standard_deviation = sqrt(standard_deviation / 63);
 
-			//with whity
+			// with whity
 			if ((standard_deviation > AC_STDDEV) || (whity_counter > WHITY_MAX))
-			//without whity
-				//if (standard_deviation > AC_STDDEV)
+			// without whity
+				// if (standard_deviation > AC_STDDEV)
 				temp_OBS += AC_FLAT_2_EDGE;
 
 			// remember last VIT_OBS_MAX many observations, so we can perform viterbi to deduce current state
