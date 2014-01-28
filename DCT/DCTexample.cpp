@@ -49,10 +49,16 @@ using namespace gpu;
 #define OBS5 4 		// DC_WHITE | AC_FLAT
 #define OBS6 5 		// DC_WHITE | AC_EDGE
 
+#define DC_BLACK_THRESHOLD 50	// every colour value below is marked as DC_BLACK
+#define DC_WHITE_THRESHOLD 190	// every colour value aobe ist marked as DC_WHITE
+
 #define AC_FLAT_2_EDGE 1 	// offset to change AC_FLAT to AC_EDGE in current observation
 #define AC_STDDEV 25 		// threshold for standard deviation
 
 #define VIT_OBS_MAX 3 		// describes how many last observation are used for viterbi
+
+#define WHITY_THESHOLD 170	// threshold, every AC pixel above threshold is whity!
+#define WHITY_MAX 4			// number of whities, which are required to set block as foreground
 
 #define STATE_MAX 25 		// describes how many last states are used for time based filtering
 
@@ -60,8 +66,9 @@ using namespace gpu;
 #define TRAIN_SEQ_MAX 15 	// used by Baum Welch (15 seconds in total)
 #define TRAIN_MAX_ITER 3	// Baum Welch stop criteria (max_int = 2147483647)
 
-#define DEBUG_R 0
-#define DEBUG_C 5
+#define DEBUG_R 15			// block which is used for debug printing
+#define DEBUG_C 20			// block which is used for debug printing
+
 
 
 int main(int argc, char* argv[]) {
@@ -252,10 +259,10 @@ int main(int argc, char* argv[]) {
 			// division by 8 ensures uint_8 range of DC, encode DC in OBS
 			double dc = block.at<double>(0, 0) / 8;
 
-			if (dc < 50)
+			if (dc < DC_BLACK_THRESHOLD)
 				temp_OBS = OBS1;
 
-			else if (dc > 190)
+			else if (dc > DC_WHITE_THRESHOLD)
 				temp_OBS = OBS5;
 
 			else
@@ -277,14 +284,14 @@ int main(int argc, char* argv[]) {
 					standard_deviation +=
 						pow(block.at<double>(i, j), 2);
 				}
-				if (block.at<double>(i, j) / 8 + dc > 190)
+				if (block.at<double>(i, j) / 8 + dc > WHITY_THESHOLD)
 					whity_counter++;
 
 			}
 			standard_deviation = sqrt(standard_deviation / 63);
 
 			//with whity
-			if ((standard_deviation > AC_STDDEV) || (whity_counter > 5))
+			if ((standard_deviation > AC_STDDEV) || (whity_counter > WHITY_MAX))
 			//without whity
 				//if (standard_deviation > AC_STDDEV)
 				temp_OBS += AC_FLAT_2_EDGE;
