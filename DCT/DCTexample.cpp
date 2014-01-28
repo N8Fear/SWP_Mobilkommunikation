@@ -54,6 +54,8 @@ using namespace gpu;
 
 #define VIT_OBS_MAX 3 		// describes how many last observation are used for viterbi
 
+#define STATE_MAX 25 		// describes how many last states are used for time based filtering
+
 #define TRAIN_OBS_MAX 25	// used by Baum Welch (25 frames = 1 second)
 #define TRAIN_SEQ_MAX 15 	// used by Baum Welch (15 seconds in total)
 #define TRAIN_MAX_ITER 3	// Baum Welch stop criteria (max_int = 2147483647)
@@ -125,6 +127,7 @@ int main(int argc, char* argv[]) {
 	// container with Mat elements describing the HMM for a given Block,
 	// and a Matrix containing training sequences for Baum Welch with ALL observations
 	vector < vector < deque<int> > > obs_matrix;
+	vector < vector < deque<int> > > state_matrix;
 	vector < vector < Mat > > trans_matrix;
 	vector < vector < Mat > > emit_matrix;
 	vector < vector < Mat > > init_matrix;
@@ -137,6 +140,7 @@ int main(int argc, char* argv[]) {
 	int num_of_row = (heigth + heigth_offset)/blocksize;
 
 	obs_matrix.resize(num_of_col, vector <deque<int> > (num_of_row, deque<int> (VIT_OBS_MAX, OBS1)));
+	state_matrix.resize(num_of_col, vector <deque<int> > (num_of_row, deque<int> (STATE_MAX, 0)));
 
 	for (int i = 0; i<num_of_col; i++) {
 		
@@ -302,8 +306,8 @@ int main(int argc, char* argv[]) {
 					}
 
 			// save the state in the HMM, current state gets init-prob. 1 in HMM, other zero
-			// init_matrix[c][r].at<double>( 0, estates.at<int>(0,estates.cols-1) ) = 1;
-			// init_matrix[c][r].at<double>( 0, (estates.at<int>(0,estates.cols-1)+1)%2 ) = 0;
+			//init_matrix[c][r].at<double>( 0, estates.at<int>(0,estates.cols-1) ) = 1;
+			//init_matrix[c][r].at<double>( 0, (estates.at<int>(0,estates.cols-1)+1)%2 ) = 0;
 			// [INIT STATE DEBUG INFO]
 			// cout << "Current State: " << estates.at<int>(0,estates.cols-1) << endl;
 			// hmm.printModel(trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
@@ -316,6 +320,23 @@ int main(int argc, char* argv[]) {
 			// if (r == DEBUG_R && c == DEBUG_C) {
 			//  	cout << "OBS"  << temp_OBS << "	" << train_matrix[c][r] << endl;
 			// }
+
+			state_matrix[c][r].pop_front();
+			state_matrix[c][r].push_back(estates.at<int>(0,estates.cols-1));
+
+			for (int k=0; k<state_matrix[c][r].size(); k++){
+
+				if (state_matrix[c][r][k] == 0) break;
+
+				if (state_matrix[c][r].size()-1 == k){
+
+					// mark black, as no movement
+					for (int i=0; i<blocksize; ++i)
+							for (int j=0; j<blocksize; ++j) {
+								output_img.at<uint8_t>((r*blocksize)+i, (c*blocksize)+j) = BLACK;
+							}
+				}
+			}
 		}
 
 		// increment counters for Baum-Welch Training!
