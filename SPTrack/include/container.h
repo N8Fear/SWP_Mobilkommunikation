@@ -2,6 +2,7 @@
 
 #include <opencv2/opencv.hpp>
 
+#define CONTAINER_SIZE 26
 /*
  * frame_container data type:
  * stores 26 frames of video: 1 sec of pictures in slot 0-24 and the final
@@ -10,7 +11,7 @@
 class frame_container{
 	private:
 		int cur;
-		cv::Mat container[26];
+		cv::Mat container[CONTAINER_SIZE];
 		cv::Mat *current;
 
 	public:
