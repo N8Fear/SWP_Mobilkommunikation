@@ -1,7 +1,7 @@
 #pragma once
 
 #include <opencv2/opencv.hpp>
-#include "SPTrack.h"
+#include "config.h"
 
 /*
  * frame_container data type:
