@@ -35,6 +35,7 @@ sp_hmm::sp_hmm()
 Mat sp_hmm::hmm_exec(Mat input)
 {
 	Mat output_img= input.clone();
+	output_img.convertTo(output_img, CV_8UC1);
 	//TODO: just temporary clutch
 	string dir_output="/tmp/out/";
 
@@ -94,7 +95,7 @@ Mat sp_hmm::hmm_exec(Mat input)
 				viterbi_seq.at<int>(0,i) = obs_matrix[c][r][i];
 			}
 			cv::Mat estates;
-			hmm.viterbi(viterbi_seq, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r], estates);
+			hmm->viterbi(viterbi_seq, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r], estates);
 
 			// mark the block BLACK, if state 0 (background)
 			if (estates.at<int>(0,estates.cols-1) == 0)
@@ -119,7 +120,6 @@ Mat sp_hmm::hmm_exec(Mat input)
 			//	cout << "OBS"  << temp_OBS << "	" << train_matrix[c][r] << endl;
 			// }
 		}
-/*
 		// increment counters for Baum-Welch Training!
 		train_obs++;
 		if (train_obs == TRAIN_OBS_MAX){
@@ -145,7 +145,7 @@ Mat sp_hmm::hmm_exec(Mat input)
 
 						// }
 						// else
-							hmm.train(train_matrix[c][r], TRAIN_MAX_ITER, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
+							hmm->train(train_matrix[c][r], TRAIN_MAX_ITER, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
 				}
 
 				// write 2d vector into file, all adjusted HMM will be saved!
@@ -173,7 +173,6 @@ Mat sp_hmm::hmm_exec(Mat input)
 		//		break;
 			}
 		}
-*/
 	return output_img;
 }
 
@@ -190,6 +189,9 @@ int sp_hmm::hmm_init(Dimensions &dim)
 	// Matrix should be initiated with the default array or data read from learn-file
 	num_of_col = (dim.width + dim.width_offset)/BLOCKSIZE;
 	num_of_row = (dim.height + dim.height_offset)/BLOCKSIZE;
+
+	CvHMM sp_hmm;
+	hmm = &sp_hmm;
 
 	this->obs_matrix.resize(num_of_col, vector <deque<int> > (num_of_row, deque<int> (VIT_OBS_MAX, OBS1)));
 

@@ -39,7 +39,7 @@ class sp_hmm {
 		int seq_num;
 		int obs_num;
 		int max_iter;
-		CvHMM hmm;
+		CvHMM *hmm;
 		//cv::Mat train_seq;
 		cv::Mat TRGUESS;
 		cv::Mat EMITGUESS;
