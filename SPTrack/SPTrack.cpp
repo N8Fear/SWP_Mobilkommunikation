@@ -71,6 +71,8 @@ int SPTrack::play_stream()
 			break;
 		}
 	}
+	// Call destruktor manually to save state of learning
+	run_hmm->~sp_hmm();
 	return 0;
 }
 

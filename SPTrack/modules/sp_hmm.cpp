@@ -30,14 +30,41 @@ sp_hmm::sp_hmm()
 	INITGUESS = cv::Mat(1,2, CV_64F, INITGUESSdata);
 }
 
+sp_hmm::~sp_hmm(){
+	cout << "Saving learned state..." << endl;
+	//TODO: just temporary clutch
+	string dir_output="/tmp/out/";
+	// write 2d vector into file, all adjusted HMM will be saved!
+	ostringstream fname_emit_o;
+	ostringstream fname_init_o;
+	ostringstream fname_trans_o;
+	fname_emit_o << dir_output << "emit2D.yml";
+	fname_trans_o << dir_output << "trans2D.yml";
+	fname_init_o << dir_output << "init2D.yml";
+	FileStorage file_emit(fname_emit_o.str(), FileStorage::WRITE);
+	FileStorage file_init(fname_init_o.str(), FileStorage::WRITE);
+	FileStorage file_trans(fname_trans_o.str(), FileStorage::WRITE);
+	for (int r = 0; r < num_of_row; r++)
+		for (int c = 0; c < num_of_col; c++) {
+
+			ostringstream id_stream;
+			id_stream << "row_" << r << "-col_" << c;
+			string ID = id_stream.str();
+			file_emit << ID << emit_matrix[c][r];
+			file_init << ID << init_matrix[c][r];
+			file_trans << ID << trans_matrix[c][r];
+	}
+	file_emit.release();
+	file_init.release();
+	file_trans.release();
+}
 	/* Init done */
 //begin hmm-function
 Mat sp_hmm::hmm_exec(Mat input)
 {
+	input.convertTo(input, CV_8UC1);
 	Mat output_img= input.clone();
-	output_img.convertTo(output_img, CV_8UC1);
-	//TODO: just temporary clutch
-	string dir_output="/tmp/out/";
+//	output_img.convertTo(input, CV_8UC1);
 
 	for (int r = 0; r < num_of_row; r++)
 		for (int c = 0; c < num_of_col; c++) {
@@ -148,28 +175,6 @@ Mat sp_hmm::hmm_exec(Mat input)
 							hmm->train(train_matrix[c][r], TRAIN_MAX_ITER, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
 				}
 
-				// write 2d vector into file, all adjusted HMM will be saved!
-				ostringstream fname_emit_o;
-				ostringstream fname_init_o;
-				ostringstream fname_trans_o;
-				fname_emit_o << dir_output << "emit2D.yml";
-				fname_trans_o << dir_output << "trans2D.yml";
-				FileStorage file_emit(fname_emit_o.str(), FileStorage::WRITE);
-				FileStorage file_init(fname_init_o.str(), FileStorage::WRITE);
-				FileStorage file_trans(fname_trans_o.str(), FileStorage::WRITE);
-				for (int r = 0; r < num_of_row; r++)
-					for (int c = 0; c < num_of_col; c++) {
-
-						ostringstream id_stream;
-						id_stream << "row_" << r << "-col_" << c;
-						string ID = id_stream.str();
-						file_emit << ID << emit_matrix[c][r];
-						file_init << ID << init_matrix[c][r];
-						file_trans << ID << trans_matrix[c][r];
-				}
-				file_emit.release();
-				file_init.release();
-				file_trans.release();
 		//		break;
 			}
 		}

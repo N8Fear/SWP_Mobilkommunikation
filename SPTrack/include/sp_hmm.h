@@ -27,6 +27,7 @@ class sp_hmm {
 		int hmm_init(Dimensions &dim);
 		cv::Mat hmm_exec(cv::Mat);
 		sp_hmm();
+		~sp_hmm();
 	private:
 		int num_of_col;
 		int num_of_row;
