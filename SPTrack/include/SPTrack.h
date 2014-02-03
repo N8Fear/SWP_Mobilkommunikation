@@ -16,11 +16,13 @@
 #include "sp_dct.h"
 #include "sp_hmm.h"
 
+#define BLOCKSIZE 8
+#define CONTAINER_SIZE 26
+
 #define BLACK 0
 #define GRAY 133
 #define WHITE 255
 
-#define BLOCKSIZE 8
 
 // TODO: Check necessity
 #define DEBUG_R 0

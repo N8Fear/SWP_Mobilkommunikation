@@ -1,8 +1,8 @@
 #pragma once
 
 #include <opencv2/opencv.hpp>
+#include "SPTrack.h"
 
-#define CONTAINER_SIZE 26
 /*
  * frame_container data type:
  * stores 26 frames of video: 1 sec of pictures in slot 0-24 and the final
