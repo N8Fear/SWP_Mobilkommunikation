@@ -54,7 +54,7 @@ public:
 	{
 		seq = cv::Mat(1,_N,CV_32S);
 		states = cv::Mat(1,_N,CV_32S);
-		int n_states = _TRANS.rows;
+//		int n_states = _TRANS.rows; //UNUSED
 		cv::Mat cumulative_emis(_EMIS.size(),CV_64F);
 		for (int r=0;r<cumulative_emis.rows;r++)
 			cumulative_emis.at<double>(r,0) = _EMIS.at<double>(r,0);
@@ -112,7 +112,7 @@ public:
 		correctModel(TRANS,EMIS,INIT);
 		int nseq = seq.cols;
 		int nstates = TRANS.cols;
-		int nobs = EMIS.cols;
+//		int nobs = EMIS.cols;	//UNUSED
 		cv::Mat v(nstates,nseq,CV_64F);
         cv::Mat path(nstates,nseq,CV_32S); path = 0.0f;
         cv::Mat newpath(nstates,nseq,CV_32S); newpath = 0.0f;
@@ -168,9 +168,9 @@ public:
 		cv::Mat INIT = _INIT.clone();
 		correctModel(TRANS,EMIS,INIT);
 		int T = seq.cols; // number of element per sequence
-		int C = seq.rows; // number of sequences
+//		int C = seq.rows; // number of sequences //UNUSED
 		int N = TRANS.rows; // number of states | also N = TRANS.cols | TRANS = A = {a_{i,j}} - NxN
-		int M = EMIS.cols; // number of observations | EMIS = B = {b_{j}(k)} - NxM
+//		int M = EMIS.cols; // number of observations | EMIS = B = {b_{j}(k)} - NxM //UNUSED
 		// compute a_{0}
 		FORWARD = cv::Mat(N,T,CV_64F);
 		cv::Mat c(1,T,CV_64F); c.at<double>(0,0) = 0;
