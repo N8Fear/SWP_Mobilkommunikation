@@ -39,8 +39,8 @@ sp_hmm::~sp_hmm(){
 	ostringstream fname_init_o;
 	ostringstream fname_trans_o;
 	fname_emit_o << dir_output << "emit2D.yml";
-	fname_trans_o << dir_output << "trans2D.yml";
 	fname_init_o << dir_output << "init2D.yml";
+	fname_trans_o << dir_output << "trans2D.yml";
 	FileStorage file_emit(fname_emit_o.str(), FileStorage::WRITE);
 	FileStorage file_init(fname_init_o.str(), FileStorage::WRITE);
 	FileStorage file_trans(fname_trans_o.str(), FileStorage::WRITE);
@@ -77,29 +77,30 @@ Mat sp_hmm::hmm_exec(Mat input)
 			// division by 8 ensures uint_8 range of DC, encode DC in OBS
 			double dc = block.at<double>(0,0)/8;
 
-			if (dc < 50)
+			if (dc < DC_BLACK_THRESHOLD)
 				temp_OBS = OBS1;
 
-			else if (dc > 190)
+			else if (dc > DC_WHITE_THRESHOLD)
 				temp_OBS = OBS5;
 
 			else
 				temp_OBS = OBS3;
 
-			// check standard deviation, encode AC-std-dev in OBS
+			// check standard deviation, encode AC-std-dev and whities in OBS
+			double whity_counter = 0;
 			double standard_deviation = 0;
 			for (int i=0; i<BLOCKSIZE; ++i)
 			for (int j=0; j<BLOCKSIZE; ++j) {
 
 				if (!((i==0)&&(j==0))){ //EXCLUDE DC
-
-					standard_deviation +=
-					pow(block.at<double>(i,j), 2);
+					standard_deviation += pow(block.at<double>(i,j), 2);
+					if (block.at<double>(i,j) / 8 + dc > WHITY_THRESHOLD)
+						whity_counter++;
 				}
 			}
 			standard_deviation = sqrt (standard_deviation/63);
 
-			if (standard_deviation > AC_STDDEV)
+			if ((standard_deviation > AC_STDDEV) || (whity_counter > WHITY_MAX))
 				temp_OBS += AC_FLAT_2_EDGE;
 
 			// remember last VIT_OBS_MAX many observations, so we can perform viterbi to deduce current state
@@ -122,20 +123,31 @@ Mat sp_hmm::hmm_exec(Mat input)
 			}
 			cv::Mat estates;
 			hmm->viterbi(viterbi_seq, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r], estates);
+			// get current states for HMM and deterministic model
+			int current_hmm_state = estates.at<int>(0, estates.cols - 1);
+			int det_state = 0;
+			if (temp_OBS >= OBS4) det_state = 1;
 
-			// mark the block BLACK, if state 0 (background)
-			if (estates.at<int>(0,estates.cols-1) == 0)
-				for (int i=0; i<BLOCKSIZE; ++i)
-					for (int j=0; j<BLOCKSIZE; ++j) {
-						output_img.at<uint8_t>((r*BLOCKSIZE)+i, (c*BLOCKSIZE)+j) = BLACK;
-					}
-
-			// save the state in the HMM, current state gets init-prob. 1 in HMM, other zero
-			// init_matrix[c][r].at<double>( 0, estates.at<int>(0,estates.cols-1) ) = 1;
-			// init_matrix[c][r].at<double>( 0, (estates.at<int>(0,estates.cols-1)+1)%2 ) = 0;
-			// [INIT STATE DEBUG INFO]
-			// cout << "Current State: " << estates.at<int>(0,estates.cols-1) << endl;
-			// hmm.printModel(trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
+			// remove background based on filter-rule
+			if (COMPETING_MODELS == 1){
+				// deterministic model VS HMM: mark the block BLACK, if hmm-state and det-state are the same
+				// HMM learns the background, so if they differ, sth has appeared in the FG and should be NOT filtered
+				// TODO: create best if statement...
+				if (current_hmm_state == det_state || current_hmm_state == 1 && det_state == 0)
+				// if (current_hmm_state == det_state)
+					for (int i = 0; i<BLOCKSIZE; ++i)
+					for (int j = 0; j<BLOCKSIZE; ++j) {
+						output_img.at<uint8_t>((r*BLOCKSIZE) + i, (c*BLOCKSIZE) + j) = BLACK;
+				}
+			}
+			else {
+				// filter based on the HMM: mark the block BLACK, if state 0 (background)
+				if (current_hmm_state == 0)
+				for (int i = 0; i<BLOCKSIZE; ++i)
+				for (int j = 0; j<BLOCKSIZE; ++j) {
+					output_img.at<uint8_t>((r*BLOCKSIZE) + i, (c*BLOCKSIZE) + j) = BLACK;
+				}
+			}
 
 			// [HMM LEARNING]
 			// save observations in training sequence for current block
@@ -145,6 +157,26 @@ Mat sp_hmm::hmm_exec(Mat input)
 			// if (r == DEBUG_R && c == DEBUG_C) {
 			//	cout << "OBS"  << temp_OBS << "	" << train_matrix[c][r] << endl;
 			// }
+
+			// deterministic time filter based on last states
+			if (TIME_FILTER_ON == 1){
+				state_matrix[c][r].pop_front();
+				state_matrix[c][r].push_back(current_hmm_state);
+
+				for (int k = 0; k<state_matrix[c][r].size(); k++){
+
+					if (state_matrix[c][r][k] == 0) break;
+
+					if (state_matrix[c][r].size() - 1 == k){
+
+						// mark black, as no movement
+						for (int i = 0; i<BLOCKSIZE; ++i)
+						for (int j = 0; j<BLOCKSIZE; ++j) {
+							output_img.at<uint8_t>((r*BLOCKSIZE) + i, (c*BLOCKSIZE) + j) = BLACK;
+						}
+					}
+				}
+			}
 		}
 		// increment counters for Baum-Welch Training!
 		train_obs++;
@@ -158,23 +190,27 @@ Mat sp_hmm::hmm_exec(Mat input)
 			if (train_seq == TRAIN_SEQ_MAX){
 
 				for (int r = 0; r < num_of_row; r++)
-					for (int c = 0; c < num_of_col; c++) {
-
-						// [BAUM WELCH DEBUG INFO 2]
-						// if (r == DEBUG_R && c == DEBUG_R) {
-
-						//	hmm.printModel(trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
-						//	cout << "------------------------------------------" << endl;
-						//	hmm.train(train_matrix[c][r], TRAIN_MAX_ITER, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
-						//	hmm.printModel(trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
-						//	cout << "==========================================" << endl;
-
-						// }
-						// else
-							hmm->train(train_matrix[c][r], TRAIN_MAX_ITER, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
+				for (int c = 0; c < num_of_col; c++) {
+					// [BAUM WELCH DEBUG INFO 2]
+					// if (r == DEBUG_R && c == DEBUG_R) {
+					//	hmm.printModel(trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
+					//	cout << "------------------------------------------" << endl;
+					//	hmm.train(train_matrix[c][r], TRAIN_MAX_ITER, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
+					//	hmm.printModel(trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
+					//	cout << "==========================================" << endl;
+					// }
+					// else
+					hmm->train(train_matrix[c][r], TRAIN_MAX_ITER, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
 				}
 
-		//		break;
+				if (TRAIN_ITERATIVE == 0)
+					;
+					//TODO: what does the break statement should do?
+					//break;
+
+				// begin collecting new trainining sequences
+				train_seq = 0;
+				cout << "Updating HMM..." << endl;
 			}
 		}
 	return output_img;
@@ -198,6 +234,7 @@ int sp_hmm::hmm_init(Dimensions &dim)
 	hmm = &sp_hmm;
 
 	this->obs_matrix.resize(num_of_col, vector <deque<int> > (num_of_row, deque<int> (VIT_OBS_MAX, OBS1)));
+	this->state_matrix.resize(num_of_col, vector <deque<int> >(num_of_row, deque<int>(FILTER_STATE_MAX, 0)));
 
 	for (int i = 0; i<num_of_col; i++) {
 
