@@ -17,7 +17,7 @@ Mat *frame_container::process_frame(VideoCapture *cap)
 		cerr << "Error reading frame from stream" << endl;
 		exit(0);
 	}
-	if (++cur > CONTAINER_SIZE-2)
+	if (++cur > CONTAINER_SIZE-3)
 		cur=0;
 
 	return current;
