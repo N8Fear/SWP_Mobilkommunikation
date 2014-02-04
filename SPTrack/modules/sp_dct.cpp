@@ -3,6 +3,7 @@
 #include "SPTrack.h"
 
 using namespace cv;
+using namespace std;
 
 sp_dct::sp_dct()
 {
@@ -15,8 +16,9 @@ int sp_dct::dct_init(Dimensions &dim)
 	width_offset = dim.width_offset;
 }
 
-Mat sp_dct::dct_exec(Mat input)
+Mat sp_dct::dct_exec(frame_container *cnt)
 {
+	Mat input = *cnt->get_current();
 	//TODO: possibly move to own module
 	//blur image to reduce false detection of edges
 	GaussianBlur(input, input, Size(7, 7), 0, 0);
@@ -60,26 +62,12 @@ Mat sp_dct::dct_exec(Mat input)
 //			double dc = block.at<double>(0,0)/8;
 
 			// set one value for all pixels in block
-/*
-		for (int i=0; i<BLOCKSIZE; ++i){
-				for (int j=0; j<BLOCKSIZE; ++j) {
-
-					if (dc < 90) { //bg
-						block.at<double>(i,j) = BLACK;
-					}
-					else if (dc > 200) { //human
-						block.at<double>(i,j) = WHITE;
-					} else {
-						block.at<double>(i,j) = GRAY;
-					}
-				}
-			 }
-*/
 		}
 
 	// matrice contains real / complex parts, filter them seperatly
 	// see: http://stackoverflow.com/questions/8059989/
 	// just convert back to 8 bits per pixel
-	dct_img.convertTo(dct_img, CV_8UC1);
+//	dct_img.convertTo(dct_img, CV_8UC1);
+	*cnt->preprocessed = dct_img.clone();
 	return dct_img;
 }
