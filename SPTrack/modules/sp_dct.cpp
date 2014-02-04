@@ -13,10 +13,14 @@ int sp_dct::dct_init(Dimensions &dim)
 {
 	height_offset = dim.height_offset;
 	width_offset = dim.width_offset;
-	// move to SPTrack
 }
+
 Mat sp_dct::dct_exec(Mat input)
 {
+	//TODO: possibly move to own module
+	//blur image to reduce false detection of edges
+	GaussianBlur(input, input, Size(7, 7), 0, 0);
+
 	Mat dct_img;
 	// create gray snapshot of the current frame (RGB -> GRAY)
 	// should not influence img data or quality on IR material
