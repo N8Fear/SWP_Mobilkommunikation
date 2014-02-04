@@ -58,12 +58,10 @@ int SPTrack::play_stream()
 		}
 
 		frame_cnt.process_frame(&cap);
-		//*frame_cnt.output = (run_dct->dct_exec(*frame_cnt.get_current())).clone();
-		(run_dct->dct_exec(*frame_cnt.get_current())).clone();
-		*frame_cnt.output = (run_hmm->hmm_exec(*frame_cnt.output)).clone();
-		gen_histogram(*frame_cnt.get_current());
-		player->update_player(*frame_cnt.output);
-
+		run_dct->dct_exec(&frame_cnt);
+		run_hmm->hmm_exec(&frame_cnt);
+//		gen_histogram(*frame_cnt.get_current());
+		player->update_player(&frame_cnt);
 		if(waitKey(30) == 27) {
 			for (int i=0; i<256; i++)
 //				printf("%d;%llu;\n",i,histogram[i]);
