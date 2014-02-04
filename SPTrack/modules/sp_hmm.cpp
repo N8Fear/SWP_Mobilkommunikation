@@ -59,9 +59,11 @@ sp_hmm::~sp_hmm(){
 	file_trans.release();
 }
 
-Mat sp_hmm::hmm_exec(Mat input)
+Mat sp_hmm::hmm_exec(frame_container *cnt)
 {
-	Mat output_img = input.clone();
+	Mat input = *cnt->preprocessed;
+//	cout << "prep:" << endl << input << endl;
+	Mat output_img = *cnt->get_current();
 	input.convertTo(output_img, CV_8UC1);
 
 	for (int r = 0; r < num_of_row; r++)
@@ -171,7 +173,7 @@ Mat sp_hmm::hmm_exec(Mat input)
 						// mark black, as no movement
 						for (int i = 0; i<BLOCKSIZE; ++i)
 						for (int j = 0; j<BLOCKSIZE; ++j) {
-							output_img.at<uint8_t>((r*BLOCKSIZE) + i, (c*BLOCKSIZE) + j) = BLACK;
+							output_img.at<uint8_t>((r*BLOCKSIZE) + i, (c*BLOCKSIZE) + j) = WHITE;
 						}
 					}
 				}
@@ -212,6 +214,7 @@ Mat sp_hmm::hmm_exec(Mat input)
 				cout << "Updating HMM..." << endl;
 			}
 		}
+	*cnt->output = output_img.clone();
 	return output_img;
 }
 

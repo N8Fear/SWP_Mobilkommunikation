@@ -9,7 +9,7 @@
 class sp_hmm {
 	public:
 		int hmm_init(Dimensions &dim);
-		cv::Mat hmm_exec(cv::Mat);
+		cv::Mat hmm_exec(frame_container *cnt);
 		sp_hmm();
 		~sp_hmm();
 	private:
