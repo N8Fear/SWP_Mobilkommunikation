@@ -10,9 +10,9 @@ sp_player::sp_player(const char *name)
 	namedWindow(name, CV_WINDOW_AUTOSIZE);
 }
 
-int sp_player::update_player(Mat frame)
+int sp_player::update_player(frame_container *cnt)
 {
-	imshow("Player", frame);
+	imshow("Player", *cnt->output);
 	return 0;
 }
 
