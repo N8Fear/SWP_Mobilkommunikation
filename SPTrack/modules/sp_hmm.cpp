@@ -61,9 +61,8 @@ sp_hmm::~sp_hmm(){
 
 Mat sp_hmm::hmm_exec(Mat input)
 {
-//	input.convertTo(input, CV_8UC1);
 	Mat output_img = input.clone();
-	output_img.convertTo(input, CV_8UC1);
+	input.convertTo(output_img, CV_8UC1);
 
 	for (int r = 0; r < num_of_row; r++)
 		for (int c = 0; c < num_of_col; c++) {
