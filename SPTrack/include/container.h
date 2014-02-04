@@ -18,6 +18,7 @@ class frame_container{
 		frame_container();
 		cv::Mat *get_current();
 		cv::Mat *process_frame(cv::VideoCapture *cap);
+		cv::Mat *preprocessed;
 		cv::Mat *output;
 };
 
