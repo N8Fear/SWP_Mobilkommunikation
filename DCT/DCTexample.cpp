@@ -1,8 +1,3 @@
-// Execute with:
-// 	./DCTexample /path/to/video/file.avi seconds-offset /path/to/hmm/input/data/ /path/to/hmm/output/data/
-//
-// 	example: make && ./DCTexample /home/skyo/Desktop/DCT/ir_640x480_8.yuv.avi 15 /home/skyo/Desktop/DCT/data/input/ /home/skyo/Desktop/DCT/data/output/
-
 #include <stdio.h>
 #include <iostream>
 #include <vector>
@@ -61,9 +56,9 @@ using namespace gpu;
 #define VIT_OBS_MAX 3 		// describes how many last observation are used for viterbi/decode()
 
 #define WHITY_THESHOLD 170	// threshold, every AC pixel above threshold is whity!
-#define WHITY_MAX 4			// number of whities, which are required to set block as foreground
+#define WHITY_MAX 4			// number of whities, which are required to increment with AC_FLAT_2_EDGE
 
-#define TIME_FILTER_ON 0	// activates the time filter, which works based on the last states
+//#define TIME_FILTER_ON 0	// activates the time filter, which works based on the last states
 #define FILTER_STATE_MAX 25	// describes how many last states are used for time based filtering
 
 #define TRAIN_OBS_MAX 25	// used by Baum Welch (25 frames = 1 second)
@@ -71,10 +66,10 @@ using namespace gpu;
 #define TRAIN_MAX_ITER 100	// Baum Welch stop criteria (max_int = 2147483647)
 #define TRAIN_ITERATIVE 1	// 1 learning should happen on the fly, 0 for no live updates, output to files on escape
 
-#define DEBUG_R 15			// block which is used for debug printing
-#define DEBUG_C 20			// block which is used for debug printing
+//#define DEBUG_R 15			// block which is used for debug printing
+//#define DEBUG_C 20			// block which is used for debug printing
 
-#define COMPETING_MODELS 1	// set to 1, if deterministic model and HMM should compete
+// #define COMPETING_MODELS 1	// set to 1, if deterministic model and HMM should compete
 
 #define VITERBI_OR_DECODE 3	// set to 1 for viterbi, set to 2 for decode, 3 for both [!]
 
@@ -94,13 +89,13 @@ int main(int argc, char* argv[]) {
 		//cout << "Skip " << skip << " seconds..." << endl;
 		break;
 	case 4:
-		dir_input = argv[2]; // /home/skyo/Desktop/DCT/data/input/"
-		dir_output = argv[3]; // /home/skyo/Desktop/DCT/data/output/"
+		dir_input = argv[2]; 
+		dir_output = argv[3]; 
 		break;
 	case 5:
-		skip = (long)atoi(argv[2]); // 15
-		dir_input = argv[3]; // /home/skyo/Desktop/DCT/data/input/"
-		dir_output = argv[4]; // /home/skyo/Desktop/DCT/data/output/"
+		skip = (long)atoi(argv[2]);
+		dir_input = argv[3];
+		dir_output = argv[4];
 		break;
 	default:
 		cout << "Syntax: " << argv[0]
@@ -130,8 +125,8 @@ int main(int argc, char* argv[]) {
 
 	// create a window for playback and DCT
 	namedWindow("MyPlayback", CV_WINDOW_AUTOSIZE);
-	namedWindow("Viterbi", CV_WINDOW_AUTOSIZE);
-	namedWindow("Decode", CV_WINDOW_AUTOSIZE);
+	if (VITERBI_OR_DECODE == 1 || VITERBI_OR_DECODE == 3) namedWindow("Viterbi", CV_WINDOW_AUTOSIZE);
+	if (VITERBI_OR_DECODE == 2 || VITERBI_OR_DECODE == 3) namedWindow("Decode", CV_WINDOW_AUTOSIZE);
 
 	int train_seq = 0;					// Baum Welch counter - sequences
 	int train_obs = 0;					// Baum Welch counter - observation (duration of sequence)
@@ -242,8 +237,8 @@ int main(int argc, char* argv[]) {
 		// select eveery 8x8 bock of the image
 		Mat dct_img = float_img.clone();
 		Mat output_img = float_img.clone();
+		float_img.convertTo(output_img, CV_8UC1);		
 		Mat output_img2 = float_img.clone();
-		float_img.convertTo(output_img, CV_8UC1);
 		float_img.convertTo(output_img2, CV_8UC1);
 
 		for (int r = 0; r < num_of_row; r++)
@@ -357,6 +352,13 @@ int main(int argc, char* argv[]) {
 					obs_matrix[c][r].push_back(temp_OBS);
 				}
 
+				if (temp_OBS == most_likely_obs){ // decode
+
+					for (int i = 0; i<blocksize; ++i)
+						for (int j = 0; j<blocksize; ++j) {
+							output_img2.at<uint8_t>((r*blocksize) + i, (c*blocksize) + j) = BLACK;
+						}
+				}
 			}
 
 
@@ -396,22 +398,15 @@ int main(int argc, char* argv[]) {
 						break;
 					}
 				}
-			}
 
-			// filter if HMM-guess (background) resembles the current observations
-			if (temp_OBS == most_likely_obs2){ // viterbi
+				// filter if HMM-guess (background) resembles the current observations
+				if (temp_OBS == most_likely_obs2){ // viterbi
 
-				for (int i = 0; i<blocksize; ++i)
-					for (int j = 0; j<blocksize; ++j) {
-						output_img.at<uint8_t>((r*blocksize) + i, (c*blocksize) + j) = BLACK;
-					}
-			}
-			if (temp_OBS == most_likely_obs){ // decode
-
-				for (int i = 0; i<blocksize; ++i)
-					for (int j = 0; j<blocksize; ++j) {
-						output_img2.at<uint8_t>((r*blocksize) + i, (c*blocksize) + j) = BLACK;
-					}
+					for (int i = 0; i<blocksize; ++i)
+						for (int j = 0; j<blocksize; ++j) {
+							output_img.at<uint8_t>((r*blocksize) + i, (c*blocksize) + j) = BLACK;
+						}
+				}
 			}
 
 			//****************** OBS GUESS and DETM COMPARISON *************** [!]
@@ -487,37 +482,36 @@ int main(int argc, char* argv[]) {
 			// ... and start training if enough information
 			if (train_seq == TRAIN_SEQ_MAX){
 
-				for (int r = 0; r < num_of_row; r++)
-				for (int c = 0; c < num_of_col; c++) {
+				if (TRAIN_ITERATIVE == 1) {
 
-					// [BAUM WELCH DEBUG INFO 2]
-					// if (r == DEBUG_R && c == DEBUG_R) {
+					cout << "Updating HMM..." << endl;
+					for (int r = 0; r < num_of_row; r++)
+					for (int c = 0; c < num_of_col; c++) {
 
-					// 	hmm.printModel(trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
-					// 	cout << "------------------------------------------" << endl;
-					// 	hmm.train(train_matrix[c][r], TRAIN_MAX_ITER, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
-					// 	hmm.printModel(trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
-					// 	cout << "==========================================" << endl;
+						// [BAUM WELCH DEBUG INFO 2]
+						// if (r == DEBUG_R && c == DEBUG_R) {
 
-					// }
-					// else
-					hmm.train(train_matrix[c][r], TRAIN_MAX_ITER, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
+						// 	hmm.printModel(trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
+						// 	cout << "------------------------------------------" << endl;
+						// 	hmm.train(train_matrix[c][r], TRAIN_MAX_ITER, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
+						// 	hmm.printModel(trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
+						// 	cout << "==========================================" << endl;
+
+						// }
+						// else
+						hmm.train(train_matrix[c][r], TRAIN_MAX_ITER, trans_matrix[c][r], emit_matrix[c][r], init_matrix[c][r]);
+					}
 				}
-
-				if (TRAIN_ITERATIVE == 0)
-					break;
 
 				// begin collecting new trainining sequences
 				train_seq = 0;
-
-				cout << "Updating HMM..." << endl;
 			}
 		}
 
 		// show results
 		imshow("MyPlayback", frame);
-		imshow("Viterbi", output_img);
-		imshow("Decode", output_img2);
+		if (VITERBI_OR_DECODE == 1 || VITERBI_OR_DECODE == 3) imshow("Viterbi", output_img);
+		if (VITERBI_OR_DECODE == 2 || VITERBI_OR_DECODE == 3) imshow("Decode", output_img2);
 
 		// wait for 'esc' key press for 30 ms -- exit on 'esc' key
 		if (waitKey(30) == 27) {
