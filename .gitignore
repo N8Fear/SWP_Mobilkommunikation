@@ -6,6 +6,7 @@ CMakeFiles/
 *.bbl
 *.blg
 *.log
+*.lof
 *.out
 *.xml
 *.toc
