@@ -1,0 +1,64 @@
+\documentclass[11pt,a4paper,ngerman,bibtotoc]{scrartcl}
+\usepackage[utf8]{inputenc}
+\usepackage[ngerman]{babel}
+\usepackage[pdfpagelabels,pdfstartview = FitH,bookmarksopen = true,bookmarksnumbered = true,linkcolor = black,plainpages = false,hypertexnames = false,citecolor = black] {hyperref}
+\usepackage[pdftex]{graphicx}
+\usepackage{float} % to force figure at correct position
+\usepackage{amsmath,amssymb}
+\usepackage[style=ieee,backend=biber]{biblatex}
+\bibliography{literature.bib}
+
+% hyperlinks for figures % tables
+\usepackage{prettyref}
+\usepackage{hyperref}
+\usepackage[all]{hypcap}%nach hyperref
+\newrefformat{fig}{Abbildung~\ref{#1}}
+\newrefformat{tab}{Tabelle~\ref{#1}}
+
+\titlehead{
+	\begin{minipage}{7.6cm}
+		\vspace{-6mm}
+		\hspace{-4mm}
+  	\includegraphics[scale=0.4]{bilder/fu_logo_header.jpg} % Hochschullogo
+	\end{minipage}
+	\begin{minipage}{7.6cm}
+		\begin{flushright}
+			Fachbereich Mathematik und Informatik\\
+			Institut für Informatik\\
+			Softwareprojekt Mobilkommunikation\\
+		\end{flushright}
+	\end{minipage}
+	\\\\
+	\centerline{\hrulefill}
+}%end of titlehead
+\title{
+	\vspace{10mm}
+	Hintergrundenfernung auf Basis von Hidden Markov Models\\
+	\vspace{10mm}
+	\includegraphics{bilder/fu_logo.png}	%  kleines logo
+	\vspace{10mm}
+}
+\author{Marcin Nawrocki\\Patrick Mertes\\Hinnerk van Bruinehsen\\\\\\Betreuer: Alexandra Danilkina\\\\}
+\date{28. Februar 2014}
+%\today
+
+\begin{document}
+\maketitle\thispagestyle{empty}
+\newpage
+\tableofcontents
+\listoffigures	% to include list of figures in content
+\newpage
+
+\input{text/1-einleitung}
+\input{text/2-entwurf}
+\input{text/3-implementierung}
+\input{text/4-evaluation}
+\input{text/5-fazit}
+
+\nocite{lamarre2002tracking}
+
+\newpage
+
+\printbibliography
+
+\end{document}

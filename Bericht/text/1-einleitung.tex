@@ -1,0 +1,42 @@
+\section{Einleitung}
+\label{chap:einleitung}
+
+Dieses Kapitel soll eine Einführung in das Projekt SAFEST geben und die vorliegende Problem- stellung erläutern, welches im Rahmen des Softwareprojektes Mobilkommunikation im Wintersemester 13/14 bearbeitet wurde.
+
+
+\subsection{Kontext und Motivation}
+\label{sec:motivation}
+
+SAFEST ist ein deutsch-französisches Projekt mit der Zielsetzung, die Sicherheit an öffentlichen Plätzen und kritischen Infrastrukturen durch Realisierung eines Sensornetzwerkes mit Infrarotkameras zu erhöhen.
+ Um dieses Ziel zu erreichen, überwacht das Sensornetzwerk ein vorgegebenes Areal und verarbeitet die gewonnenen Mittelinfrarotbilder mit Hilfe von Algorithmen in Hinblick auf verschiedene Parameter.
+ Der eigentliche Gewinn an Sicherheit soll dadurch erfolgen, dass automatisiert auf Grundlage der ermittelten Parameter die Dichte an sich in dem Areal aufhaltenden Personen ermittelt wird, woraus wiederum ein Rückschluss auf die Wahrscheinlichkeit des Auftretens einer Massenpanik gezogen werden soll.\\
+
+Der erste wichtige Schritt bei dieser Analyse ist die automatisiere Erkennung und Zählung von sich im Bildbereich befindlichen Personen.
+ Um diesen Schritt wiederum zu ermöglichen, muss zunächst der Hintergrund vom Vordergrund des Bildes getrennt werden.
+ Hintergrund ist in diesem Zusammenhang als der statische Teil des Bildes zu verstehen, wohingegen der Vordergrund die sich bewegendenden Personen sind.
+ Durch die Verwendung einer Wärmebildkamera wird diese Trennung erst einmal erleichtert, da die relativ warmen Personen heller gefärbt sind als der relativ kalte Boden.
+ Da der Hintergrund aber nicht total statisch ist und der Unterschied der Helligkeit stark von der Temperaturdifferenz zwischen Boden und Personen abhängt, wird die Trennung allerdings erschwert.
+ Ein weiteres Problem ist die ständige Neukalibrierung der verwendeten Kamera.
+ Diese findet statt, wenn sich das Wärmespektrum des beobachteten Areals stark ändert, so zum Beispiel wenn viele Personen in das Bild ein- oder austreten.\\
+
+Der nächste Schritt in dieser Analyse ist die automatisierte Bestimmung der auf dem Bild sich befindlichen Personen.
+ Wird diese Analyse erfolgreich ausgeführt, so muss nur noch dieser Wert an eine Kontrolleinheit übertragen werden, nicht aber das eigentliche Bild, was im Hinblick auf auf den Datenschutz sehr wichtig ist.\\
+
+
+Eigentlich für Objekterkennung bewährte Algorithmen wie “Histogram of oriented gradients” und von openCV vorimplementierte Klassen wie  “BackgroundSubstractorMOG2” , können sich auf die Heterogenität des Hintergrundes, insbesondere die durch die Kamerakalibrierung entstehende Dynamik, nicht akkurat einstellen.
+ Daher soll ein neuer Algorithmus evaluiert werden, der über die Fähigkeit verfügt, sich der Dynamik anzupassen, um das Problem zu lösen.\\
+
+
+\subsection{Aufgabenbeschreibung}
+\label{sec:aufgabenbeschr}
+
+Das Ziel unseres Softwareprojektes ist es, ein Verfahren zu entwickeln, welches das Bild einer Infrarotkamera in Vorder- und Hintergrund trennt.
+ Die genauen Anforderungen für diesen Prozess werden in Kapitel 2.
+1 beschrieben.
+ Hierbei soll die allgemeine Verwendbarkeit von Hidden Markov Models(HMM) und Diskreten Kosinus Transformation(DCT).
+ Die theoretischen Grundlagen werden hierzu im Kapitel 2.
+2 ff. erläutert.
+ Schlussendlich soll eine vergleichende Evaluation durchgeführt werden, in dem das entwickelte Verfahren gegen ein bereits vorliegendes Histrogramm-basiertes Verfahren antreten muss, vergleiche hierzu Kapitel 4.
+
+Ein Algorithmus zum Zählen von Personen liegt bereits vor und muss innerhalb dieses Projektes nicht mehr entworfen beziehungsweise implementiert werden.
+
