@@ -1,29 +1,33 @@
-\section{Entwurf eines Vordergrund-Extractors}
+\section{Entwurf eines Vordergrund-Extraktors}
 \label{chap:entwurf}
 
-Dieses Kapitel soll den nötigen theoretischen Hintergrund herausarbeiten und gemäß den Anforderungen unseren Entwurf vorstellen.
- Es wird das Konzept der hidden markov models und der diskreten Kosinus Transformation erläutert und deren Verknüpfung eingeführt.
+In diesem Kapitel wird der nötige, theoretische Hintergrund herausgearbeitet und unser Entwurf gemäß den Anforderungen vorgestellt.
+Es wird das Konzept der Hidden-Markov-Modelle (HMM) und der Diskreten Kosinustransformation(DCT) erläutert und deren Verknüpfung eingeführt.
+%TODO: Kommentar unklar: "mit fehlenden werten pro pixel ..."
 
 
 \subsection{Anforderungsanalyse}
 \label{sec:anforderungsanalyse}
 
-Betrachtet man die funktionalen Anforderungen, so ist bereits in der Aufgabenbeschreibung angedeutet, was der Vordergrund-Extractor können muss.
- Es soll demonstriert werden, dass hidden markov models zur Trennung von Vordergrund und Hintergrund bei stark heterogenen Hintergründen geeignet sind, wie in folgender Abbildung dargestellt:
+Die funktionalen Anforderungen an einen Vordergrund-Extraktor sind bereits in der Aufgabenbeschreibung (\ref{sec:aufgabenbeschreibung} ausgeführt:
+Es soll demonstriert werden, dass HMM zur Trennung von Vordergrund und Hintergrund bei stark heterogenen Hintergründen geeignet sind, wie in folgender Abbildung dargestellt:
 %TODO: Abb einfügen
 
-Die nichtfunktionalen Anforderungen fordern vor allem eine einfache Benutzbarkeit durch Automatisierung.
- Der Ressourcenbedarf darf nicht zu groß sein - ein Video wird für gewöhnlich mit 25 Frames pro Sekunde aufgezeichnet, im Idealfall ist eine optimale Analyse jedes einzelnen Frames in Echtzeit möglich.
- Hierbei ist zu beachten, dass eine hohe Korrektheit zu erzielen ist, das heißt, dass die Ergebnisse fehlerfrei sein müssen.
- Eine Flexibilität bezüglich unterschiedlicher Videotypen ist gewünscht, also die Unterstützung von variierenden Videoauflösungen et cetera.
+Die nichtfunktionalen Anforderungen umfassen vor allem eine einfache Benutzbarkeit durch Automatisierung.
+Der Ressourcenbedarf soll möglichst gering sein - ein Video wird für gewöhnlich mit 25 Frames pro Sekunde aufgezeichnet, im Idealfall ist eine optimale Analyse jedes einzelnen Frames in Echtzeit möglich.
+%Hierbei ist zu beachten, dass eine hohe Korrektheit zu erzielen ist, das heißt, dass die Ergebnisse fehlerfrei sein müssen.
+Allerdings ist zu berücksichtigen, dass eine möglichst hohe Korrektheit wichtiger ist, als eine Analyse in Echtzeit. Falls nötig können auch Bilder ausgelassen werden.
+%Eine Flexibilität bezüglich unterschiedlicher Videotypen ist gewünscht, also die Unterstützung von variierenden Videoauflösungen et cetera.
+Die Analyse sollte jedoch unabhängig von den Parametern des verwendeten Videomaterials wie beispielsweise unterschiedliche Videoformate oder Auflösungen statt finden.
 
 
-\subsection{Hidden Markov Models}
+\subsection{Hidden-Markov-Modelle}
 \label{sec:hiddenmarkovmodel}
 
 Die Markov Modelle stammen aus der Wahrscheinlichkeitstheorie und entsprechen einem stochastischem Zustandsautomaten, bei dem die Zustandswechsel gemäß einer Wahrscheinlichkeit statt finden und nicht abhängig von der Vergangenheit sind, sondern nur von dem aktuellen Zustand.
- Bei den hidden markov (HMM) models können jene Zustände nicht beobachtet werden, sondern nur die Beobachtungen/Ausgaben, welche während dieses Zustandes auftreten, sie werden Emissionen genannt.
- Die Zustandsübergangswahrscheinlich- keiten sind in den HMM somit nicht die einzigen Parameter, die Emissionswahrscheinlichkeiten bilden die zweiten Parameter.\\
+%TODO: Kommentar: etwas salopp formuliert: sollte also nochmal überarbeitet werden.
+Bei den HMM\cite{Stamp04arevealing} können jene Zustände nicht beobachtet werden, sondern nur die Beobachtungen/Ausgaben, welche während dieses Zustandes auftreten, sie werden Emissionen genannt.
+Die Zustandsübergangswahrscheinlich- keiten sind in den HMM somit nicht die einzigen Parameter, die Emissionswahrscheinlichkeiten bilden die zweiten Parameter.\\
 
 Formal definiert ist ein HMM ein 5er-Tupel $\lambda= (S, V, A, B, \Pi)$ mit:
 
@@ -37,7 +41,7 @@ Formal definiert ist ein HMM ein 5er-Tupel $\lambda= (S, V, A, B, \Pi)$ mit:
 
 Ein HMM heißt zeitinvariant, wenn sich die Übergangs- und Emissionswahrscheinlichkeiten nicht mit der Zeit ändern.
 
-HMM werden zunehmend in der Literatur zur zur Sprach-, Schrift und Mustererkennung verwendet, da sie mit den probabilistischen Übergängen die Prozesse der echten Welt besser widerspiegeln als deterministische Definitionen, zu dem können die Parameter durch Lernalgorithmen automatisiert bestimmt werden.
+HMM werden zunehmend in der Literatur zur Sprach-, Schrift und Mustererkennung \cite{Gales:2007:AHM:1373536.1373537}\cite{Yang1995161} verwendet, da sie mit den probabilistischen Übergängen die Prozesse der echten Welt besser widerspiegeln als deterministische Definitionen, zu dem können die Parameter durch Lernalgorithmen automatisiert bestimmt werden.
  siehe hierzu Kapitel 2.5.
 
 %TODO: Grafik einfügen
@@ -47,72 +51,79 @@ HMM werden zunehmend in der Literatur zur zur Sprach-, Schrift und Mustererkennu
 Die vorliegende Abbildung demonstriert ein HMM mit 3 Zuständen und 4 Emissionen, wobei der Übergang aus jedem Zustand zu jedem Zustand und zusätzlich in jedem Zustand jede Emission möglich ist.
 Es liegt eine Gleichverteilung vor, Übergänge zwischen Zuständen haben stets die Wahrscheinlichkeit $1/3$, die Emissionen haben stets eine Wahrscheinlichkeit von $1/4$.
  Beschriftung der Kanten aus Übersichtsgründen nicht dargestellt.
+%TODO: Bedeutung von Beispiel/Grafik, wieso gleichverteilt, Quelle?
 
 
-\subsection{Standardalgorithmen der HMM}
+\subsection{Standartalgorithmen von HMMs}
+\label{sec:standartalgorithmenHMM}
+%TODO: Alexandras Vorschlag: Gängige Problemstellungen
 
 Für die HMM wurden bereits viele Algorithmen entwickelt, welche Standardprobleme lösen.
  Die zwei häufigsten Problemstellungen bei HMMs sind das Lernproblem und das Evaluations-/Decodingproblem.
 
 \begin{enumerate}
-	\item Das Lernproblem wird durch den Baum-Welch Algorithmus gelöst, welcher dazu verwendet wird, unbekannte Parameter, genauer die Übergangs- und Emiossionswahrscheinlichkeiten eines HMM, zu bestimmen.
+	\item Das Lernproblem bezieht sich auf die Problematik ein HMM so zu trainieren, dass man im Folgenden das HMM dafür nutzen kann, Aussagen über die wahrscheinlichsten Folgezustände zu treffen.
+Gelöst wird dieses Problem durch den Baum-Welch Algorithmus, welcher dazu verwendet wird, unbekannte Parameter, genauer die Übergangs- und Emiossionswahrscheinlichkeiten eines HMM, zu bestimmen.
  Hierbei handelt es sich um einen erwartungsmaximierenden Algorithmus, welcher anhand von übergebenen Trainingssequenzen die Maximum-Likelihood-Schätzwerte berechnet.
  Die initialen Werte eines HMMs müssen geschätzt werden, hier wird für gewöhnlich eine Gleichverteilung angenommen, dass heißt das jeder Übergang und jede Emission in einem Zustand gleich wahrscheinlich sind.
 
-	\item Das Evaluations-/Decodingproblem wird durch den Forward-Algorithmus beziehungsweise den eng verwandten Viterbi-Algorithmus gelöst.
+	\item Das Evaluations-/Decodingproblem bezieht sich auf die Problemaik aus den verschieden Wahrscheinlichkeiten Aussagen über die Folgezustände oder aber über die Wahrscheinlichkeit bestimmter Zustandsketten zu treffen.
+Es wird durch den Forward-Algorithmus beziehungsweise den eng verwandten Viterbi-Algorithmus gelöst.
  Gegeben sei eine Chronik an k-letzten Emissionen, was ist die Wahrscheinlichkeit für eine bestimme Emission? Und ferner, was ist die wahrscheinlichste Emission? Der Viterbi-Algorithmus berechnet zur Beantwortung dieser Frage die wahrscheinlichste Zustandssequenz, also eine Sequenz die die Wahrscheinlichkeit der übergebenen Emissionssequenz maximiert, und kann anhand des letzten Zustandes dieser Sequenz das Problem lösen.
  Der Forward-Algorithmus ist ein Algorithmus aus der dynamischen Programmierung und optimiert im Gegensatz zum Viterbi nicht rückwirkend die gesamte Zustandssequenz neu, sondern berechnet den aktuell wahrscheinlichsten Zustand auf Basis der zuvor berechneten Zustände und hängt diesen an.
  Somit ist der Forward Algorithmus zur Laufzeit grundsätzlich schneller, jedoch nicht so genau wie der Viterbi-Algorithmus.
  \end{enumerate}
 
 
-\subsection{Diskrete Kosinus Transformation}
+\subsection{Diskrete Kosinustransformation}
+\label{sec:dct}
 
-Die diskrete Kosinus Transformation (DCT) ist ein Verfahren, welches zur verlustbehafteten Kompression von Daten verwendet wird, wobei die bekannteste Anwendung das Dateiformat JPEG ist.
+Die Diskrete Kosinustransformation (DCT)\cite{Khayam03thediscrete} ist ein Verfahren, welches zur verlustbehafteten Kompression von Daten verwendet wird, wobei die bekannteste Anwendung das Dateiformat JPEG ist.
  Ähnlich zu der diskreten Fourier Transformation wird eine Information mittels Frequenzen repräsentiert, wobei wie der Name bereits nahe legt nur Kosiunusfunktionen verwendet werden.
- 
+
 
 Es existieren mehrere Varianten der DCT.
- Wird jedoch die DCT auf Bildinformationen angewandt, speziell bei der JPEG-Kompression, so wird die zwei-dimensionale Typ II DCT verwendet, welche die gängiste Variante ist.
- Die DCT erhält eine $n \times  n$ Matrix und gibt eine Matrix der selben Größe zürück, wobei im JPEG-Standard $8 \times 8$ Pixel Matrizen betrachtet werden.
- Hierbei wird das Element $[1,1]$ als DC-Wert bezeichnet und bildet den Durchschnittswert der Farben der betrachteten Matrix; die restlichen 63 Werte der Matrix sind ein Offset zu dem DC-Wert und kodieren somit den Unterschied zum DC-Wert innerhalb der Matrix.
- Diese Werte werden als AC-Werte bezeichnet.
+Wird jedoch die DCT auf Bildinformationen angewandt, speziell bei der JPEG-Kompression, so wird die zwei-dimensionale Typ II DCT verwendet, welche die gängiste Variante ist.
+%TODO: Anmerkung: wieso ist DCT-II die gängigste Variante?
+Die DCT erhält eine $n \times  n$ Matrix und gibt eine Matrix der selben Größe zürück, wobei im JPEG-Standard $8 \times 8$ Pixel Matrizen betrachtet werden.
+Hierbei wird das Element $[1,1]$ als DC-Wert bezeichnet und bildet den Durchschnittswert der Farben der betrachteten Matrix; die restlichen 63 Werte der Matrix sind ein Offset zu dem DC-Wert und kodieren somit den Unterschied zum DC-Wert innerhalb der Matrix.
+Diese Werte werden als AC-Werte bezeichnet.
 
 
- Formal definiert ist die DCT eine lineare, invertierbare Funktion $f : \mathbb{R}^n \rightarrow \mathbb{R}^n$, welche $N$ reellwertige Werte aus $x[n]$ in $N$ reellwertige Werte nach $X[n]$ überführt:
+Formal definiert ist die DCT eine lineare, invertierbare Funktion $f : \mathbb{R}^n \rightarrow \mathbb{R}^n$, welche $N$ reellwertige Werte aus $x[n]$ in $N$ reellwertige Werte nach $X[n]$ überführt:
 
  $X_k = \sum\limits_{n=0\rightarrow N-1} x_n \cos [\frac{\Pi}{N} + (n + \frac{1}{2}) k ]$ mit $k = 0,..., N-1$
 
 
 Die folgende Abbildung zeigt das Ergebnis nach der Anwendung der DCT mit Einfärben der gesamten Blöcke in die jeweils berechneten DC-Werte.
+%TODO: Abb einfügen, Name & Ref im Text einfügen.
 
 
 \subsection{Modellierung eines Eingabealphabets}
+\label{sec:modellierungeingabealphabet}
 
-Das Kapitel 2.
-2 hat das Konzept der HMM vorgestellt, jedoch nicht näher definiert wie eine Emission aussieht.
- Das Alphabet der Emissionen wird als Eingabealphabet bezeichnet, da die Symbole des Alphabets dem HMM übergeben werden.
- Hierbei ist zu beachten, dass das Eingabealphabet endlich und diskret sein muss.
- Zusätzlich sollte das Eingabealphabet aus möglichst wenigen, aussagekräftigen Symbolen bestehen.
- Die Kodierung eines Eingabealphabets gehört daher in unserem Fall zu der Kernleistung bei der Verwendung von HMM.
- 
-
-Die im Kapitel 2.
-3 vorgestellte DCT wird von uns verwendet, um ein Eingabealphabet zu erzeugen, wobei wir die DCT auf fest definierte Bereiche anwenden.
+In unserem Projekt sollen HMM benutzt werden, um eine Entscheidung zu treffen, ob ein Bildbereich zum Vorder- oder zum Hintergrund gehört.
+Nach dem das generelle Konzept von HMM in Kapitel \ref{sec:hiddenmarkovmodel} vorgestellt wurde, fehlt jedoch noch die Definition, wie eine Emission aussieht.
+Das Alphabet der Emissionen wird als Eingabealphabet bezeichnet, da mit dessen Hilfe das System beschrieben werden kann.
+Hierbei ist zu beachten, dass das Eingabealphabet endlich und diskret sein muss.
+Zusätzlich sollte das Eingabealphabet aus möglichst wenigen, aussagekräftigen Symbolen bestehen.
+Die Kodierung, also die Zuordnung von Daten zu bestimmten Emissionen,  eines Eingabealphabets gehört daher in unserem Fall zu der Kernleistung bei der Verwendung von HMM.\\
+Die im Kapitel \ref{sec:standartalgorithmenHMM} vorgestellte DCT wird von uns verwendet, um ein Eingabealphabet zu erzeugen, wobei wir die DCT auf fest definierte Bereiche anwenden.
  Wir übernehmen die aus der Bildkompression üblichen 8 x 8 Pixelblöcke zur Einteilung des vorliegenden Bildes, da wir dieses als optimalen Kompromiss zwischen einer zu hohen und niedrigen Granularität ansehen: kleinere Betrachtungen, so zum Beispiel pixelbasierte Verfahren, wären deutlich rechenintensiver und anfälliger auf Bildrauschen und würden daher keine akkuraten Rückschlüsse bei Veränderungen des Pixelwertes ermöglichen.
  Bei größeren Betrachtungen wären relevante Veränderungen deutlich schwerer wahrzunehmen, speziell im DC-Wert, da dieser stets den Mittelwert aller Subpixel der Matrix darstellt.
- 
+
 
 \subsubsection{DC-Wert}
 
 Da Bildaufnahmen von Mittelinfrarot-Kameras stets schwarzweiß sind (und warme Bereiche heller dargestellt werden als kühle) besitzt ein Pixel genau einen Informationskanal mit einem Grauwert zwischen 0 (schwarz) bis 255 (weiß).
- Der DC-Wert liegt somit als Mittelwert ebenso in diesem Intervall.
- Dieser Bereich ist zu groß um als Eingabealphabet für das HMM dienen zu können, da zum Beispiel der Übergang von einem Grauwert von 230 auf 235 nicht aussagekräftig ist, da es sich hierbei um Rauschen oder aber eine Neukalibrierung der Kamera, die sich ja stets auf die gesamte $8 \times 8$ Matrix auswirkt, halten kann.
- 
+Der DC-Wert liegt somit als Mittelwert ebenso in diesem Intervall.
+Dieser Bereich ist zu groß um als Eingabealphabet für das HMM dienen zu können, da zum Beispiel der Übergang von einem Grauwert von 230 auf 235 nicht aussagekräftig ist, da es sich hierbei um Rauschen oder aber eine Neukalibrierung der Kamera, die sich ja stets auf die gesamte $8 \times 8$ Matrix auswirkt, halten kann.\\
 
 Wir nehmen jedoch eine Dreiteilung des Wärmespektrums an, einen kühlen Hintergrund, warmen Vordergrund und ein mittelwarmen Bereich.
- Histogramm-basierte Analysen der DC-Werte über mehrere unterschiedliche Videosequenzen über alle Pixelblöcke genormt bestätigen diese Annahme und manifestieren 3 Cluster, die wir vereinfacht Cluster schwarz, Cluster grau und Cluster weiß nennen - der Darstellungsfarbe des Wärmespektrums entsprechend.
- Die Grenzen dieser Cluster sind abhängig von jedem Video und dem betrachteten Umfeld, denn die insbesondere die Kälte (und damit die Farbe) des Hintergrundes kann sich bei den jeweiligen Videos stark unterscheiden.
+Diese Dreiteilung ergibt sich daraus, dass es sehr wahrscheinlich ist, dass sehr helle Bereiche zum Vordergrund und sehr dunkle Bereiche zum Hintergrund gehören.
+Bei dem größten Bereich, der aus verschiedenen Grauwerten besteht, ist eine einfache Zuordnung allerdings nicht möglich. Mehr Teile machen hingegen auch keinen Sinn, da diese dann nur Zuordnungen wie "wahrscheinlich Vordergrund" oder "wahrscheinlich Hintergrund" zuliessen, diese Wahrscheinlichkeiten aber durch das HMM bereits mit einem unsicheren Teil abgebildet werden.
+Histogramm-basierte Analysen der DC-Werte über mehrere unterschiedliche Videosequenzen über alle Pixelblöcke genormt bestätigen diese Annahme und manifestieren 3 Cluster, die wir vereinfacht Cluster schwarz, Cluster grau und Cluster weiß nennen - der Darstellungsfarbe des Wärmespektrums entsprechend.
+Die Grenzen dieser Cluster sind abhängig von jedem Video und dem betrachteten Umfeld, denn die insbesondere die Kälte (und damit die Farbe) des Hintergrundes kann sich bei den jeweiligen Videos stark unterscheiden.
 
 
 Wir bilden auf Basis dieser Erkenntnis die ersten 3 Symbole, wobei, wenn der DC-Wert eines Blockes in das Intervall eines Clusters fällt, wir die entsprechende Beobachtung erstellen:
@@ -126,23 +137,24 @@ Wir bilden auf Basis dieser Erkenntnis die ersten 3 Symbole, wobei, wenn der DC-
 Das folgenden Bild zeigt eine exemplarische Einteilung in die drei Cluster.
  Die X-Achse beschreibt den Grauwert, die Y-Achse das Vorkommen.
 
+%TODO: Grafik Histogramm einfügen, Achsenbezeichnungen, Name und Label ergänzen
+ %
 \subsubsection{AC-Wert}
 
-Die bei der Anwendung der DCT entstehende 8 x 8 Matrix enthält 63 AC-Werte, diese bilden demnach den Großteil der in der Matrix kodierten Informationen; die Integration dieser Werte in das Eingabealphabet ist aufgrund der hohen Informationsdichte essenziell.
- 
+Die bei der Anwendung der DCT entstehende 8 x 8 Matrix enthält 63 AC-Werte, diese bilden demnach den Großteil der in der Matrix kodierten Informationen; die Integration dieser Werte in das Eingabealphabet ist aufgrund der hohen Informationsdichte essenziell.\\
+Eine Histogramm-basierte Betrachtung der AC-Werte analog zu der Betrachtung der DC-Werte ist nicht zielführend, da es sich hierbei um Offsets handelt, welche demnach im Histogramm ein Maximum um den Nullwert bilden.
+Wir erkennen jedoch, das Menschen aufgrund ihrer warmen Austrahlung eine starke Kante zu dem Hintergrund bilden, läuft demnach ein Mensch durch einen Block, müsste eine deutliche Abweichung einiger AC-Werte zum DC-Wert entstehen.
+Eine Block-basierte Analyse bestätigt diese Annahme, die Standardabweichung (STD) der AC-Werte bezüglich des DC-Wertes steigt deutlich an, falls eine Person sich im Block befindet beziehungsweise durch diesen hindurch läuft.
 
-Eine Histogramm-basierte Betrachtung der AC-Werte ist nicht zielführend, da es sich hierbei um Offsets handelt, welche demnach im Histogramm ein Maximum um den Nullwert bilden.
- Wir erkennen jedoch, das Menschen aufgrund ihrer warmen Austrahlung eine starke Kante zu dem Hintergrund bilden, läuft demnach ein Mensch durch einen Block, müsste eine deutliche Abweichung einiger AC-Werte zum DC-Wert entstehen.
- Eine Block-basierte Analyse bestätigt diese Annahme, die Standardabweichung (STD) der AC-Werte bezüglich des DC-Wertes steigt deutlich an, falls eine Person sich im Block befindet beziehungsweise durch diesen hindurch läuft.
- 
 
-An folgender Abbildung sieht man auf der X-Achse den Zeitverlauf in Frame und auf der Y-Achse den Wert der Standardabweichung für den betrachteten Bock; es lässt sich feststellen, dass die Kurve der Standabweichung stark ausschlägt, falls eine Person durch den Block läuft
+An folgender Abbildung sieht man auf der X-Achse den Zeitverlauf in Frame und auf der Y-Achse den Wert der Standardabweichung für den betrachteten Bock; es lässt sich feststellen, dass die Kurve der Standabweichung stark ausschlägt, falls eine Person durch den Block läuft.
+%TODO: Abb einfügen, Name&Ref&Achsenbezeichnungen
 
 Anhand von empirischen Tests lässt sich ein Threshold ermitteln, falls die Standardabweichung diesen übersteigt, befindet sich mit hoher Wahrscheinlichkeit eine Person im Block.
  In dem vorgestellten Beispiel liegt dieser bei 25.
 
 
-Zusätzlich ist zu beachten, dass die Standardabweichung von wenigen, aber extremen statistischen Ausreißern (statistical "outliers") kaum beeinflusst wird, diese Situation liegt  jedoch während der Erkennung von Menschen vor, insbesondere bei Personen, die Kleidung tragen, welche die Wärmeabgabe der Person dämmt, und dennoch einige freiliegende Körperteile sichtbar sind.
+Zusätzlich ist zu beachten, dass die Standardabweichung von wenigen, aber extremen statistischen Ausreißern kaum beeinflusst wird, diese Situation liegt  jedoch während der Erkennung von Menschen vor, insbesondere bei Personen, die Kleidung tragen, welche die Wärmeabgabe der Person dämmt, und dennoch einige freiliegende Körperteile sichtbar sind.
  In diesem Fall ist der Großteil der AC-Werte relativ klein und der DC-Wert des betrachteten Blockes für gewöhnlich innerhalb des grauen Intervalls.
  Um in diesen Situationen den Vordergrund besser zu erkennen, prüfen wir mithilfe eines selbstdefinierten Verfahrens outliers() ob stark-positive (warme) Ausreißer vorliegen, welches den Wahrheitswert true zurückliefert, falls eine gewissen Anzahl von Ausreißern erkannt wird.
 
@@ -154,46 +166,45 @@ Vor allem bei Kleidung tragenden Personen führt dies dazu, dass nicht nur ihre 
 Infolge dieser Erkenntnise bilden wir die zwei weiteren Beobachtungen:
 
 \begin{itemize}
-	\item $(STD von AC_{1-63} < Threshold ) \wedge !Outliers \rightarrow$  Beobachtung AC\_LOW
-	\item $(STD von AC_{1-63} > Threshold ) \vee Outliers \rightarrow$  Beobachtung AC\_HIGH
+	\item $(\text{STD von }AC_{1-63} < \text{Threshold} ) \wedge !\text{Outliers} \rightarrow$  Beobachtung AC\_LOW
+	\item $(\text{STD von }AC_{1-63} > \text{Threshold} ) \vee \text{Outliers} \rightarrow$  Beobachtung AC\_HIGH
 \end{itemize}
 
 
 
-Auf Basis unserer Beobachtungen können nun anhand aller möglichen Permutationen von DC- und AC-Beobachtungen die Symbole unseres Eingabealphabets gebildet werden:
+Auf Basis unserer Beobachtungen können nun anhand aller möglichen Permutationen von DC- und AC-Beobachtungen die Symbole unseres Eingabealphabets gebildet werden. Diees ist in Tabelle \ref{table:eingabealphabet} dargestellt.
 
-Symbol 1
-DC\_BLACK
-AC\_LOW
-Symbol 2
-DC\_BLACK
-AC\_HIGH
-Symbol 3
-DC\_GREY
-AC\_LOW
-Symbol 4
-DC\_GREY
-AC\_HIGH
-Symbol 5
-DC\_WHITE
-AC\_LOW
-Symbol 6
-DC\_WHITE
-AC\_HIGH
+\begin{table}
+	\label{table:eingabealphabet}
+	\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Alphabetsymbol}&\textbf{DC-Wert}&\textbf{Standartabweichung AC}\\
+\hline
+Symbol 1&DC\_BLACK&AC\_LOW\\
+\hline
+Symbol 2&DC\_BLACK&AC\_HIGH\\
+\hline
+Symbol 3&DC\_GREY&AC\_LOW\\
+\hline
+Symbol 4&DC\_GREY&AC\_HIGH\\
+\hline
+Symbol 5&DC\_WHITE&AC\_LOW\\
+\hline
+Symbol 6&DC\_WHITE&AC\_HIGH\\
+\hline
+\end{tabular}
+	\caption{Eingabealphabet}
+\end{center}
+\end{table}
 
-\subsection{Verfahren zur Hintergrundentfernung}
+\subsection{Verfahren zur Vordergrund-Extraktion}
 
 Unser Verfahren zur Vordergrund-Extraktion basiert auf den zuvor genannten  Algorithmen, der Bildpartitionierung in Blöcke und dem eingeführten Eingabealphabet.
-
-
-Jeder Block erhält ein eigenes, individuelles HMM, da Blöcke unterschiedliche Übergangs-/Emissionswahrscheinlichkeiten aufgrund ihrer Lokalität aufweisen: ein Block am Rand neigt eher dazu kühl und dunkel zu sein, ein Block an einer Tür hingegen ist eher öfter Veränderungen ausgesetzt, da erwartungsgemäß häufiger Personen in diesem Bereich hindurchlaufen.
- 
-
+Jeder Block wird durch ein eigenes, individuelles HMM modeliert, da Blöcke unterschiedliche Übergangs-/Emissionswahrscheinlichkeiten aufgrund ihrer Lokalität aufweisen: ein Block am Rand neigt eher dazu kühl und dunkel zu sein, ein Block an einer Tür hingegen ist eher öfter Veränderungen ausgesetzt, da erwartungsgemäß häufiger Personen in diesem Bereich hindurchlaufen.\\
 In der ersten Phase ist ein Trainingsvideo zu verwenden, welches dazu dient, (individuelle) Trainingssequenzen für die Blöcke zu erstellen und im Folgenden diese dem Baum-Welch-Algorithmus zu übergeben, welcher die HMMs blocklokal trainiert.
- Da in einem Block hauptsächlich der Hintergrund zu beobachten ist, wird jeder Block nach der Lernphase seinen eigenen Hintergrund kennen lernen und somit die korrespondierenden Emissionen als wahrscheinlicher bewerten.
-
-
-In der zweiten Phase kann bereits ein Evaluationsvideo eingesetzt werden.
+ Da in einem Block hauptsächlich der Hintergrund zu beobachten ist, wird jeder Block nach der Lernphase seinen eigenen Hintergrund lernen und somit die korrespondierenden Emissionen als wahrscheinlicher bewerten.\\
+ In der zweiten Phase kann bereits ein Live-Video (in der Anwendung) eingesetzt werden.
  Für jeden Block wird die aktuelle Beobachtung gebildet.
  Die HMMs werden nun zur Vorhersage und Verifikation verwendet.
  Unter Verwendung des Forward- oder Viterbi-Algorithmus kann nun die nächste Emission prognostiziert werden.
@@ -201,12 +212,9 @@ In der zweiten Phase kann bereits ein Evaluationsvideo eingesetzt werden.
  Bei Gleichheit handelt es sich offensichtlich um den erlernten Hintergrund, bei Abweichungen ist ein Vordergrundobjekt in den Block eingetreten.
  Die aktuelle Emission wird an eine Warteschlange der k-letzten Emissionen angehangen und die Operationen wiederholt.
 
+%TODO: PSEUDOCODE?
 
-
-
-TODO: PSEUDOCODE?
-
-Erklärung warum eine HMM-TOPOLOGIE NICHT so wichtig ist bzw wir iene mit 2 zuständen gneommen haben? 
+Erklärung warum eine HMM-TOPOLOGIE NICHT so wichtig ist bzw wir iene mit 2 zuständen gneommen haben?
 Vorschlag:
 
 Bei der Konzeption des von uns verwendeten HMMs muss der Kontext betrachtet werden, in dem diese eingesetzt werden sollen: mit Hilfe der HMMs sollen die einzelnen  Frames eines Videos in Hintergrund, d.
