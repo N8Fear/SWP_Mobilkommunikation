@@ -1,7 +1,7 @@
 \section{Einleitung}
 \label{chap:einleitung}
 
-Dieses Kapitel soll eine Einführung in das Projekt SAFEST geben und die vorliegende Problem- stellung erläutern, welches im Rahmen des Softwareprojektes Mobilkommunikation im Wintersemester 13/14 bearbeitet wurde.
+Dieses Kapitel gibt eine Einführung in das Projekt SAFEST und die vorliegende Problemstellung erläutern, welches im Rahmen des Softwareprojektes Mobilkommunikation im Wintersemester 13/14 bearbeitet wurde.
 
 
 \subsection{Kontext und Motivation}
@@ -10,21 +10,23 @@ Dieses Kapitel soll eine Einführung in das Projekt SAFEST geben und die vorlieg
 SAFEST ist ein deutsch-französisches Projekt mit der Zielsetzung, die Sicherheit an öffentlichen Plätzen und kritischen Infrastrukturen durch Realisierung eines Sensornetzwerkes mit Infrarotkameras zu erhöhen.
  Um dieses Ziel zu erreichen, überwacht das Sensornetzwerk ein vorgegebenes Areal und verarbeitet die gewonnenen Mittelinfrarotbilder mit Hilfe von Algorithmen in Hinblick auf verschiedene Parameter.
  Der eigentliche Gewinn an Sicherheit soll dadurch erfolgen, dass automatisiert auf Grundlage der ermittelten Parameter die Dichte an sich in dem Areal aufhaltenden Personen ermittelt wird, woraus wiederum ein Rückschluss auf die Wahrscheinlichkeit des Auftretens einer Massenpanik gezogen werden soll.\\
-
 Der erste wichtige Schritt bei dieser Analyse ist die automatisiere Erkennung und Zählung von sich im Bildbereich befindlichen Personen.
  Um diesen Schritt wiederum zu ermöglichen, muss zunächst der Hintergrund vom Vordergrund des Bildes getrennt werden.
- Hintergrund ist in diesem Zusammenhang als der statische Teil des Bildes zu verstehen, wohingegen der Vordergrund die sich bewegendenden Personen sind.
- Durch die Verwendung einer Wärmebildkamera wird diese Trennung erst einmal erleichtert, da die relativ warmen Personen heller gefärbt sind als der relativ kalte Boden.
- Da der Hintergrund aber nicht total statisch ist und der Unterschied der Helligkeit stark von der Temperaturdifferenz zwischen Boden und Personen abhängt, wird die Trennung allerdings erschwert.
- Ein weiteres Problem ist die ständige Neukalibrierung der verwendeten Kamera.
- Diese findet statt, wenn sich das Wärmespektrum des beobachteten Areals stark ändert, so zum Beispiel wenn viele Personen in das Bild ein- oder austreten.\\
+% Hintergrund ist in diesem Zusammenhang als der statische Teil des Bildes zu verstehen, wohingegen der Vordergrund die sich bewegendenden Personen sind.
+% Durch die Verwendung einer Wärmebildkamera wird diese Trennung erst einmal erleichtert, da die relativ warmen Personen heller gefärbt sind als der relativ kalte Boden.
+% Da der Hintergrund aber nicht total statisch ist und der Unterschied der Helligkeit stark von der Temperaturdifferenz zwischen Boden und Personen abhängt, wird die Trennung allerdings erschwert.
+% Ein weiteres Problem ist die ständige Neukalibrierung der verwendeten Kamera.
+% Diese findet statt, wenn sich das Wärmespektrum des beobachteten Areals stark ändert, so zum Beispiel wenn viele Personen in das Bild ein- oder austreten.\\
+Die verwendete Kamera stellt wärmere Bereiche heller und kältere Bereiche dunkler dar. Daraus folgt, dass Personen erwartungsgemäß eher weiß und Hintergrund erwartungsgemäß eher schwarz dargestellt werden.
+Allerdings kalibiert sich die Kamera regelmäßig neu, um den gesamten Graustufenverlauf zur darstellung der Wärme zu nutzen. Daraus folgt, dass mitunter auch sehr kalte Bereiche sehr hell dargestellt werden, wenn diese die wärmsten von der Kamera erfassten Temperaturen besitzen.
+Aus dieser Eigenschaft der Kamera folgt somit auch, dass ein naiver Ansatz wie eine feste Zuordnung von Temperatur und Graustufenwert nicht möglich sind. Ein weiteres Hindernis bei der einfachen Zuordnung von Temperaturwerten zu Vorder- oder Hintergrund ist die Tatsache, dass Kleidung (besonders zum Beispiel dickere Jacken) die Temperatur sehr gut nach außen isolieren und damit Teile von Personen sehr dunkel auf dem Kamerabild erscheinen lassen.\\
+Die Trennung von Vorder- und Hintergrund kann daher nicht allein aufgrund der dargestellten Temperatur erfolgen, sondern muss als zweiten Faktor die Bewegung mit einbeziehen.
+Personen sind also in der Darstellung mehr oder weniger helle, bewegte Objekte.\\
+Nach erfolgter Entfernung des Hintergrunds folgt als nächster Schritt in der Analyse die automatisierte Bestimmung der auf dem Bild sich befindlichen Personen.
+Wird diese Analyse erfolgreich ausgeführt, so muss nur noch dieser Wert an eine Kontrolleinheit übertragen werden, nicht aber das eigentliche Bild, was im Hinblick auf auf den Datenschutz sehr wichtig ist.\\
+Eigentlich für Objekterkennung bewährte Algorithmen wie Histogramm orientierte Gradienten (HOG)\cite{Dalal05histogramsof} und die Mischung gausscher Verteilungsdichten (MOG)\cite{DBLP:conf/focs/Dasgupta99}, können sich auf die Eigenschaften von Vorder- und Hintergrund, insbesondere die durch die Kamerakalibrierung entstehende Dynamik, nicht so einstellen, dass sie befriedigende ergebnisse liefern.
 
-Der nächste Schritt in dieser Analyse ist die automatisierte Bestimmung der auf dem Bild sich befindlichen Personen.
- Wird diese Analyse erfolgreich ausgeführt, so muss nur noch dieser Wert an eine Kontrolleinheit übertragen werden, nicht aber das eigentliche Bild, was im Hinblick auf auf den Datenschutz sehr wichtig ist.\\
-
-
-Eigentlich für Objekterkennung bewährte Algorithmen wie “Histogram of oriented gradients” und von openCV vorimplementierte Klassen wie  “BackgroundSubstractorMOG2” , können sich auf die Heterogenität des Hintergrundes, insbesondere die durch die Kamerakalibrierung entstehende Dynamik, nicht akkurat einstellen.
- Daher soll ein neuer Algorithmus evaluiert werden, der über die Fähigkeit verfügt, sich der Dynamik anzupassen, um das Problem zu lösen.\\
+Daher soll ein neuer Algorithmus evaluiert werden, der über die Fähigkeit verfügt, sich der Dynamik anzupassen, um das Problem zu lösen.\\
 
 
 \subsection{Aufgabenbeschreibung}
@@ -33,10 +35,8 @@ Eigentlich für Objekterkennung bewährte Algorithmen wie “Histogram of orient
 Das Ziel unseres Softwareprojektes ist es, ein Verfahren zu entwickeln, welches das Bild einer Infrarotkamera in Vorder- und Hintergrund trennt.
  Die genauen Anforderungen für diesen Prozess werden in Kapitel 2.
 1 beschrieben.
- Hierbei soll die allgemeine Verwendbarkeit von Hidden Markov Models(HMM) und Diskreten Kosinus Transformation(DCT).
- Die theoretischen Grundlagen werden hierzu im Kapitel 2.
-2 ff. erläutert.
- Schlussendlich soll eine vergleichende Evaluation durchgeführt werden, in dem das entwickelte Verfahren gegen ein bereits vorliegendes Histrogramm-basiertes Verfahren antreten muss, vergleiche hierzu Kapitel 4.
-
-Ein Algorithmus zum Zählen von Personen liegt bereits vor und muss innerhalb dieses Projektes nicht mehr entworfen beziehungsweise implementiert werden.
+ Hierbei soll die allgemeine Verwendbarkeit von Hidden-Markov-Modellen(HMM)\cite{Stamp04arevealing} und der Diskreten Kosinustransformation(DCT)\cite{Khayam03thediscrete} gezeigt werden..
+ Die theoretischen Grundlagen werden hierzu im Kapitel \ref{chap:entwurf} ff. erläutert.
+ Schlussendlich soll eine vergleichende Evaluation durchgeführt werden, in dem das entwickelte Verfahren gegen ein bereits vorliegendes Histrogramm-basiertes Verfahren antreten muss(vgl. Kapitel \ref{chap:evaluation}).\\
+Da bereits ein Algorithmus zum Zählen von Personen vorliegt, muss dieser nicht innerhalb dieses Projektes entworfen beziehungsweise implementiert werden.
 
