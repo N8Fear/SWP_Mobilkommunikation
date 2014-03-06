@@ -27,7 +27,6 @@ Die Implementierung sowohl unseres Testbeds als auch die finale Implementierung 
 \label{sec:opencv}
 OpenCV ist eine Bibliothek die eine Vielzahl unterschiedlicher Algorithmen für die Bildbearbeitung und somit letztlich für die Videobearbeitung zur Verfügung stellt.
  Hinzu kommt, dass auch Funktionen für das Lesen, Schreiben und Abspielen von Videodateien verschiedener Datentypen sowie von Kamera-Devices angeboten werden.\\
-
 OpenCV bietet Interfaces für C, Python, Java und C++ und lässt sich auf vielen unterschiedlichen Plattformen einsetzen.
  Für unser Projekt relevant waren dabei vor allem die Funktionen zur Wiedergabe von Videos sowie die in OpenCV enthaltene DCT Implementierung.
 
@@ -36,7 +35,6 @@ OpenCV bietet Interfaces für C, Python, Java und C++ und lässt sich auf vielen
 \label{sec:cvhmm}
 Die Wahl einer geeigneten Bibliothek für HMMs ist nicht trivial.
  Es existieren nicht sehr viele effiziente und aktiv entwickelte Bibliotheken für HMMs, die für unser Projekt in Frage kämen.\\
-
 Letztlich fiel unserer Wahl auf CvHMM, vor allem da diese Bibliothek direkt auf dem in OpenCV enthaltenen Standard-Videodatentyp Mat arbeitet und daher die Vermutung nahe liegt, dass weniger Performanceeinbußen vorliegen, da keine Konvertierung von Daten in andere Formate erfolgen muss.\\
 
 
