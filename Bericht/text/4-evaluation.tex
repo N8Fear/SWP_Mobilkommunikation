@@ -1,12 +1,14 @@
 \section{Evaluation}
 \label{chap:evaluation}
-Wir haben mit Hilfe des gegebenen tracking-Frameworks verschiedene Konstellationen mit einander verglichen:
+Am Ende unserer Arbeit wurde uns ein Framework des SAFEST-Projekts zur Verfügung gestellt, dass die Möglichkeit bietet, verschiedene vorimplementierte Algorithmen mit einander zu vergleichen.\\
+Nachdem wir unseren Algorithmus in das Framework integriert hatten, habendie folgenden Vergleiche mit einer vorimplementierten, Histogramm-basierten Lösung angestellt:
 \begin{itemize}
 	\item[a)] die vorimplementierte Lösung, die mit Histogrammen arbeitet
 	\item[b)] unsere HMM-basierte Lösung mit generischen Werten für Initialwerte, Emission und Transition ohne Lernen
 	\item[c)] unsere HMM-basierte Lösung mit generischen Werten für Initialwerte, Emission und Transition mit Lernen
 	\item[d)] unsere HMM-basierte Lösung mit vorgelernten Werten und Lernen
 \end{itemize}
+Weitere Vergleiche haben wir nicht angestellt, da das Histogramm-basierte Verfahren den anderen Verfahren entweder überlegen ist (OpenCV MOG und OpenCV MOG2) oder aber das Verfahren den Hintergrund hart auf bestimmte Videos kodiert (MEAN) und sehr unflexibel ist, sobald der Hintergrund nicht mehr uniform ist.
 \subsection{Vergleich mit Histogramm-basierter Implementierung: Innenhof}
 \label{sec:eval_innenhof}
 
@@ -25,4 +27,3 @@ Wir haben mit Hilfe des gegebenen tracking-Frameworks verschiedene Konstellation
  %dynamische histrogramm/cluster grenzen für dc wert in zukunft?
  %viterbi/forawrd gibt zustand, man kann entweder gewichtestes würfeln oder aber deterministisch die wahrschienlichste beobachtung nehmen, was ist besser? -> test?
  %performance gewinn durch threading zusätzlich
- 
