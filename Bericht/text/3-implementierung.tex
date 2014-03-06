@@ -1,7 +1,7 @@
 \section{Implementierung und praktische Details}
 \label{chap:implementierung}
 
-Dieses Kapitel soll einen kurzen Überblick zu den von uns verwendeten Technologien bieten, die wir zur Realisierung des theoretischen Entwurfs aus Kapitel 2 verwendet haben.
+Dieses Kapitel gibt einen kurzen Überblick zu den von uns verwendeten Technologien, die wir zur Realisierung des theoretischen Entwurfs aus Kapitel \ref{chap:entwurf} verwendet haben.
 
 
 \subsection{Videomaterial}
@@ -13,21 +13,20 @@ In der Praxis spielt dies jedoch keine große Rolle, da unter Linux der Zugriff 
 Insgesamt standen uns sieben unterschiedliche Videosequenzen zur Verfügung, von denen sechs paarweise entstandene Aufnahmen sind.
  Das bedeutet, dass Kameraposition sowie Winkel zwischen den beiden Videosequenzen eines Paares nicht differiert, lediglich die aufgenommenen Szenen sind unterschiedlich.
  Diese Tatsache ist insofern hilfreich, als das wir die Möglichkeit haben, auf einer Videosequenz zu lernen und die erlernten Parameter später auf der anderen Videosequenz anzuwenden.\\
-
 Der größte Nachteil der Verwendung von Videosequenzen ist, dass die einzelnen Sequenzen relativ kurz sind (Dauer übersteigt nicht 10 Minuten) und es somit nicht möglich war, wirklich lange Lernphasen von zum Beispiel einigen Stunden unter realistischen Bedingungen zu testen.\\
-
+%TODO: Need Vorteil
 Sämtliche Videosequenzen laufen mit 25 Frames pro Sekunde, was auf jeden Fall genug Daten zur Auswertung liefert.
  In der Praxis würden vermutlich auch schon weniger Frames genügen, da zu erwarten ist, dass sich die Personen im Bild nicht so schnell bewegen, dass sich innerhalb eines anderen Bruchteils einer Sekunde sehr viel verändert.
 
 \subsection{C++}
 \label{sec:cpp}
-Die Implementierung sowohl unseres Testbeds als auch die finale Implementierung als Komponente zur Foreground extraction in einem vorgegebenen Framework fand in C++ statt.
+Die Implementierung sowohl unseres Testbeds als auch die finale Implementierung als Komponente zur Vordergrund-Extraktion in einem vorgegebenen Framework fand in C++ statt.
  Für die Wahl von C++ gab es verschiedene Gründe, von denen vor allem die Performance, die Portabilität sowie das gute Angebot an zur Verfügung stehenden Bibliotheken im Vordergrund standen.
 
 \subsection{OpenCV}
 \label{sec:opencv}
 OpenCV ist eine Bibliothek die eine Vielzahl unterschiedlicher Algorithmen für die Bildbearbeitung und somit letztlich für die Videobearbeitung zur Verfügung stellt.
- Hinzu kommt, dass auch Funktionen für das Lesen, Schreiben und Abspielen von Videodateien angeboten werden.\\
+ Hinzu kommt, dass auch Funktionen für das Lesen, Schreiben und Abspielen von Videodateien verschiedener Datentypen sowie von Kamera-Devices angeboten werden.\\
 
 OpenCV bietet Interfaces für C, Python, Java und C++ und lässt sich auf vielen unterschiedlichen Plattformen einsetzen.
  Für unser Projekt relevant waren dabei vor allem die Funktionen zur Wiedergabe von Videos sowie die in OpenCV enthaltene DCT Implementierung.
