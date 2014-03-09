@@ -10,9 +10,13 @@ Es wird das Konzept der Hidden-Markov-Modelle (HMM) und der Diskreten Kosinustra
 \label{sec:anforderungsanalyse}
 
 Die funktionalen Anforderungen an einen Vordergrund-Extraktor sind bereits in der Aufgabenbeschreibung (\ref{sec:aufgabenbeschreibung} ausgeführt:
-Es soll demonstriert werden, dass HMM zur Trennung von Vordergrund und Hintergrund bei stark heterogenen Hintergründen geeignet sind, wie in folgender Abbildung dargestellt:
-%TODO: Abb einfügen
-
+Es soll demonstriert werden, dass HMM zur Trennung von Vordergrund und Hintergrund bei stark heterogenen Hintergründen geeignet sind, wie in Abbildung \ref{fig:foreground} dargestellt.
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{bilder/01_foreground.pdf}
+	\caption{Kamerabild, Vordergrund ist markiert}
+	\label{fig:foreground}
+\end{figure}
 Die nichtfunktionalen Anforderungen umfassen vor allem eine einfache Benutzbarkeit durch Automatisierung.
 Der Ressourcenbedarf soll möglichst gering sein - ein Video wird für gewöhnlich mit 25 Frames pro Sekunde aufgezeichnet, im Idealfall ist eine optimale Analyse jedes einzelnen Frames in Echtzeit möglich.
 %Hierbei ist zu beachten, dass eine hohe Korrektheit zu erzielen ist, das heißt, dass die Ergebnisse fehlerfrei sein müssen.
@@ -39,16 +43,16 @@ Formal definiert ist ein HMM ein 5er-Tupel $\lambda= (S, V, A, B, \Pi)$ mit:
 Ein HMM heißt zeitinvariant, wenn sich die Übergangs- und Emissionswahrscheinlichkeiten nicht mit der Zeit ändern.\\
 HMM werden zunehmend in der Literatur zur Sprach-, Schrift und Mustererkennung \cite{Gales:2007:AHM:1373536.1373537}\cite{Yang1995161} verwendet, da sie mit den probabilistischen Übergängen die Prozesse der echten Welt besser widerspiegeln als deterministische Definitionen, zu dem können die Parameter durch Lernalgorithmen automatisiert bestimmt werden.
  siehe hierzu Kapitel 2.5.
-
-%TODO: Grafik einfügen
-
-
-
-Die vorliegende Abbildung demonstriert ein HMM mit 3 Zuständen und 4 Emissionen, wobei der Übergang aus jedem Zustand zu jedem Zustand und zusätzlich in jedem Zustand jede Emission möglich ist.
-Es liegt eine Gleichverteilung vor, Übergänge zwischen Zuständen haben stets die Wahrscheinlichkeit $1/3$, die Emissionen haben stets eine Wahrscheinlichkeit von $1/4$.
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{bilder/02_hmm.pdf}
+	\caption{Beispiel für ein HMM}
+	\label{fig:hmm}
+\end{figure}
+Abbildung \ref{fig:hmm} zeigt ein HMM mit 3 Zuständen und 4 Emissionen, wobei der Übergang aus jedem Zustand zu jedem Zustand und zusätzlich in jedem Zustand jede Emission möglich ist.
+In diesem Beispiel liegt eine Gleichverteilung vor, Übergänge zwischen Zuständen haben stets die Wahrscheinlichkeit $1/3$, die Emissionen haben stets eine Wahrscheinlichkeit von $1/4$.
 Beschriftung der Kanten aus Übersichtsgründen nicht dargestellt.
 %TODO: Bedeutung von Beispiel/Grafik, wieso gleichverteilt, Quelle?
-
 
 \subsection{Standartalgorithmen von HMMs}
 \label{sec:standartalgorithmenHMM}
@@ -83,14 +87,21 @@ Die DCT erhält eine $n \times  n$ Matrix und gibt eine Matrix der selben Größ
 Hierbei wird das Element $[1,1]$ als DC-Wert bezeichnet und bildet den Durchschnittswert der Farben der betrachteten Matrix; die restlichen 63 Werte der Matrix sind ein Offset zu dem DC-Wert und kodieren somit den Unterschied zum DC-Wert innerhalb der Matrix.
 Diese Werte werden als AC-Werte bezeichnet.\\
 Formal definiert ist die DCT eine lineare, invertierbare Funktion $f : \mathbb{R}^n \rightarrow \mathbb{R}^n$, welche $N$ reellwertige Werte aus $x[n]$ in $N$ reellwertige Werte nach $X[n]$ überführt:\\
-$X_k = \sum\limits_{n=0\rightarrow N-1} x_n \cos [\frac{\Pi}{N} + (n + \frac{1}{2}) k ]$ mit $k = 0,..., N-1$
 
-Die folgende Abbildung zeigt das Ergebnis nach der Anwendung der DCT mit Einfärben der gesamten Blöcke in die jeweils berechneten DC-Werte.
-%TODO: Abb einfügen, Name & Ref im Text einfügen.
+\begin{centering}
+$X_k = \sum\limits_{n=0\rightarrow N-1} x_n \cos [\frac{\Pi}{N} + (n + \frac{1}{2}) k ]$ mit $k = 0,..., N-1$\\
+\end{centering}
+
+Abbildung \ref{fig:dct} zeigt das Ergebnis nach der Anwendung der DCT mit Einfärben der gesamten Blöcke in die jeweils berechneten DC-Werte.
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{bilder/03_dct_dc-only.pdf}
+\caption{Links: Originalbild, rechts: Bild nach Anwendung der DCT blockweise nach DC-Wert eingefärbt}
+	\label{fig:dct}
+\end{figure}
 
 \subsection{Modellierung eines Eingabealphabets}
 \label{sec:modellierungeingabealphabet}
-
 In unserem Projekt sollen HMM benutzt werden, um eine Entscheidung zu treffen, ob ein Bildbereich zum Vorder- oder zum Hintergrund gehört.
 Nach dem das generelle Konzept von HMM in Kapitel \ref{sec:hiddenmarkovmodel} vorgestellt wurde, fehlt jedoch noch die Definition, wie eine Emission aussieht.
 Das Alphabet der Emissionen wird als Eingabealphabet bezeichnet, da mit dessen Hilfe das System beschrieben werden kann.
@@ -101,8 +112,8 @@ Die im Kapitel \ref{sec:standartalgorithmenHMM} vorgestellte DCT wird von uns ve
 Wir übernehmen die aus der Bildkompression üblichen 8 x 8 Pixelblöcke zur Einteilung des vorliegenden Bildes, da wir dieses als optimalen Kompromiss zwischen einer zu hohen und niedrigen Granularität ansehen: kleinere Betrachtungen, so zum Beispiel pixelbasierte Verfahren, wären deutlich rechenintensiver und anfälliger auf Bildrauschen und würden daher keine akkuraten Rückschlüsse bei Veränderungen des Pixelwertes ermöglichen.
 Bei größeren Betrachtungen wären relevante Veränderungen deutlich schwerer wahrzunehmen, speziell im DC-Wert, da dieser stets den Mittelwert aller Subpixel der Matrix darstellt.
 
-
 \subsubsection{DC-Wert}
+\label{sec:dc-wert}
 
 Da Bildaufnahmen von Mittelinfrarot-Kameras stets schwarzweiß sind (und warme Bereiche heller dargestellt werden als kühle) besitzt ein Pixel genau einen Informationskanal mit einem Grauwert zwischen 0 (schwarz) bis 255 (weiß).
 Der DC-Wert liegt somit als Mittelwert ebenso in diesem Intervall.
@@ -119,20 +130,32 @@ Wir bilden auf Basis dieser Erkenntnis die ersten 3 Symbole, wobei, wenn der DC-
 	\item DC-Wert im Intervall Cluster grau$\rightarrow$ Beobachtung: DC\_GREY
 	\item DC-Wert im Intervall Cluster weiß $\rightarrow$ Beobachtung DC\_WHITE
 \end{itemize}
-Das folgenden Bild zeigt eine exemplarische Einteilung in die drei Cluster.
-Die X-Achse beschreibt den Grauwert, die Y-Achse das Vorkommen.
+Abbildung \ref{fig:histogram}Bild zeigt eine exemplarische Einteilung in die drei Cluster.
+Die X-Achse beschreibt dabei den Grauwert, die Y-Achse die Anzahl Blöcke eines bestimmten Grauwerts.
+Für die Erstellung des Histograms wurden sämtliche Grauwerte aller Blöcke eines Testvideos über die gesamte Länge des Videos erfasst.
+\begin{figure}[H]
+	\centering
+	\includegraphics[trim=0cm 3cm 0cm 3cm, clip=true,width=1\textwidth]{bilder/04_histogram_cluster.pdf}
+	\caption{Histogramm über alle DC-Werte aller Blöcke einer Videosequenz, Clustergrenzen rot}
+	\label{fig:histogram}
+\end{figure}
 
-%TODO: Grafik Histogramm einfügen, Achsenbezeichnungen, Name und Label ergänzen
- %
 \subsubsection{AC-Wert}
+\label{sec:ac-wert}
 
 Die bei der Anwendung der DCT entstehende 8 x 8 Matrix enthält 63 AC-Werte, diese bilden demnach den Großteil der in der Matrix kodierten Informationen; die Integration dieser Werte in das Eingabealphabet ist aufgrund der hohen Informationsdichte essenziell.\\
 Eine Histogramm-basierte Betrachtung der AC-Werte analog zu der Betrachtung der DC-Werte ist nicht zielführend, da es sich hierbei um Offsets handelt, welche demnach im Histogramm ein Maximum um den Nullwert bilden.
 Wir erkennen jedoch, das Menschen aufgrund ihrer warmen Austrahlung eine starke Kante zu dem Hintergrund bilden, läuft demnach ein Mensch durch einen Block, müsste eine deutliche Abweichung einiger AC-Werte zum DC-Wert entstehen.
 Eine Block-basierte Analyse bestätigt diese Annahme, die Standardabweichung (STD) der AC-Werte bezüglich des DC-Wertes steigt deutlich an, falls eine Person sich im Block befindet beziehungsweise durch diesen hindurch läuft.\\
-An folgender Abbildung sieht man auf der X-Achse den Zeitverlauf in Frame und auf der Y-Achse den Wert der Standardabweichung für den betrachteten Bock; es lässt sich feststellen, dass die Kurve der Standabweichung stark ausschlägt, falls eine Person durch den Block läuft.\\
-%TODO: Abb einfügen, Name&Ref&Achsenbezeichnungen
-Anhand von empirischen Tests lässt sich ein Threshold ermitteln, falls die Standardabweichung diesen übersteigt, befindet sich mit hoher Wahrscheinlichkeit eine Person im Block.
+Abbildung \ref{fig:ac_over_time} stellt auf der X-Achse den Zeitverlauf in Frames und auf der Y-Achse den Wert der Standardabweichung für den betrachteten Bock; es lässt sich feststellen, dass die Kurve der Standabweichung stark ausschlägt, falls eine Person durch den Block läuft.\\
+\begin{figure}[H]
+	\centering
+	\includegraphics[trim=0cm 4.5cm 0cm 4cm, clip=true,width=1\textwidth]{bilder/05_AC_over_time.pdf}
+	\caption{Standartabweichung der AC-Werte eines diskreten Blocks über der Zeit}
+	\label{fig:ac_over_time}
+\end{figure}
+Anhand von empirischen Tests lässt sich eine Grenze ermitteln.
+Falls die Standardabweichung diese übersteigt, betritt oder verlässt mit hoher Wahrscheinlichkeit eine Person den betrachteten Block.
 In dem vorgestellten Beispiel liegt dieser bei 25.\\
 Zusätzlich ist zu beachten, dass die Standardabweichung von wenigen, aber extremen statistischen Ausreißern kaum beeinflusst wird, diese Situation liegt  jedoch während der Erkennung von Menschen vor, insbesondere bei Personen, die Kleidung tragen, welche die Wärmeabgabe der Person dämmt, und dennoch einige freiliegende Körperteile sichtbar sind.
 In diesem Fall ist der Großteil der AC-Werte relativ klein und der DC-Wert des betrachteten Blockes für gewöhnlich innerhalb des grauen Intervalls.
