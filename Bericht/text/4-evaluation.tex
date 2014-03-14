@@ -6,7 +6,6 @@ Nachdem wir unseren Algorithmus in das Framework integriert hatten, haben die fo
 	\item[a)] die vorimplementierte Lösung, die mit Histogrammen arbeitet
 	\item[b)] unsere HMM-basierte Lösung mit generischen Werten für Initialwerte, Emission und Transition ohne Lernen
 	\item[c)] unsere HMM-basierte Lösung mit generischen Werten für Initialwerte, Emission und Transition mit Lernen
-	\item[d)] unsere HMM-basierte Lösung mit vorgelernten Werten
 \end{itemize}
 Weitere Vergleiche haben wir nicht angestellt, da das Histogramm-basierte Verfahren den anderen Verfahren entweder überlegen ist (OpenCV MOG und OpenCV MOG2) oder aber das Verfahren den Hintergrund hart auf bestimmte Videos kodiert (MEAN) und sehr unflexibel ist, sobald der Hintergrund nicht mehr uniform ist.\\
 Das Ergebnis haben wir jeweils visualisiert, indem wir für jeden zu evaluierenden Algorithmus die Abweichung vom eigentlich erwarteten Wert visualisiert haben.
@@ -17,41 +16,44 @@ Die erwarteten Werte für diesen Vergleich sind uns seitens des SAFEST Projekts 
 \begin{figure}
 	\centering
 \includegraphics[width=1\textwidth]{bilder/safest_plot_tegel_7-55.pdf}
-	\caption{Innenhof: Abweichung der getesteten Algorithmen vom echten Wert}
-	\label{fig:Innenhof}
+\caption{Innenhof: Histogramm vs. nicht lernendes HMM}
+	\label{fig:Innenhof_nl}
 \end{figure}
 
 \subsection{Vergleich mit Histogramm-basierter Implementierung: Eingang}
 \label{sec:eval_eingang}
 \begin{figure}
 	\centering
-\includegraphics[width=1\textwidth]{bilder/safest_plot_tegel_7-55.pdf}
-	\caption{Eingang: Abweichung der getesteten Algorithmen vom echten Wert}
-	\label{fig:Eingang}
+\includegraphics[width=1\textwidth]{bilder/safest_plot_eingang2_nolearn.pdf}
+	\caption{Eingang: Histogramm vs. nicht lernendes HMM}
+	\label{fig:Eingang-nolearn}
 \end{figure}
+\begin{figure}
+	\centering
+\includegraphics[width=1\textwidth]{bilder/safest_plot_eingang2_nolearn.pdf}
+	\caption{Eingang: Histogramm vs. nicht lernendes HMM}
+	\label{fig:Eingang-learn}
+\end{figure}
+In der Grafik \ref{fig:Eingang-nolearn} kann man sehen, dass beide Algorithmen Probleme mit dem Videomaterial haben. Was auch auffällt ist, dass gerade in der zweiten, schlechteren Hälfte der HMM-basierte Algorithmus deutlich bessere Ergebnisse liefert, als der Histogrammbaiserte Algorithmus.\\
+
 
 \subsection{Vergleich mit Histogramm-basierter Implementierung: Tegel}
 \label{sec:eval:tegel}
 \begin{figure}
 	\centering
-\includegraphics[width=1\textwidth]{bilder/safest_plot_tegel_7-55.pdf}
-	\caption{Tegel: Abweichung der getesteten Algorithmen vom echten Wert, Video I}
-	\label{fig:tegel_5-29}
+\includegraphics[width=1\textwidth]{bilder/safest_plot_tegel_7-55_hmm_learn.pdf}
+	\caption{Tegel: Histogramm vs. lernendes HMM}
+	\label{fig:tegel_7-55_learn}
 \end{figure}
 
 \begin{figure}
 	\centering
-\includegraphics[width=1\textwidth]{bilder/safest_plot_tegel_7-55.pdf}
-	\caption{Tegel: Abweichung der getesteten Algorithmen vom echten Wert Video II}
-	\label{fig:tegel_7-55}
+\includegraphics[width=1\textwidth]{bilder/safest_plot_tegel_7-55_hmm_nolearn.pdf}
+	\caption{Tegel: Histogramm vs. HMM mit generischen Startwerten}
+	\label{fig:tegel_7-55_nolearn}
 \end{figure}
-
-\subsection{Diskussion}
-\label{sec:diskussion}
- %bezug auf anforderungen nehmen, punkte erfüllt?
- %hmm topologie?
- %andere libs?
- %forward vs. viterbi
- %dynamische histrogramm/cluster grenzen für dc wert in zukunft?
- %viterbi/forawrd gibt zustand, man kann entweder gewichtestes würfeln oder aber deterministisch die wahrschienlichste beobachtung nehmen, was ist besser? -> test?
- %performance gewinn durch threading zusätzlich
+Wie man Abbildung \ref{fig:tegel_7-55_learn} entnehmen kann, sind die Ergebnisse beider Algorithen vom Verlauf her sehr ähnlich. Im Großen und Ganzen kann man den Histogramm-basierten Algorithmus dem von uns entwickten HMM-basierten Algorithmus gegenüber im Falle dieses Videos als überlegen betrachten.
+Allerdings haben beide Algorithmen relativ starke Abweichungen gegenüber den eigentlich gezählten Werten (HMM maximal 10, Histogramm maximal 9).
+Es fällt weiterhin auf, dass der HMM-basierte Algorithmus zwischenzeitlich immer wieder bessere Ergebnisse liefert (z.B. bei ca. 40-50 Sekunden und bei ca. 70-80 Sekunden).
+Dies liegt vermutlich daran, dass die HMMs zu diesem Zeitpunkt gerade eine Lernphase abgeschlossen haben, deren Ergebnis für eine gewisse Zeit andauert, so dass das HMM die Wirklichkeit in diesen Momenten besser beschreibt.\\
+Eine weitere Auffälligkeit ist, dass das für dieses Video ein nicht lernendes HMM mit generischen Werten bessere Ergebnisse liefert, als das lernende HMM und das Histogramm-basierte (vergleiche Grafik \ref{fig:tegel_7-55_nolearn}.

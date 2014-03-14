@@ -1,6 +1,20 @@
 \section{Fazit und Ausblick}
 \label{chap:fazit}
+\subsection{Diskussion}
+\label{sec:diskuss}
+%TODO:
+ %bezug auf anforderungen nehmen, punkte erfüllt?
+ %hmm topologie?
+ %andere libs?
+ %forward vs. viterbi
+ %dynamische histrogramm/cluster grenzen für dc wert in zukunft?
+ %viterbi/forawrd gibt zustand, man kann entweder gewichtestes würfeln oder aber deterministisch die wahrschienlichste beobachtung nehmen, was ist besser? -> test?
+ %performance gewinn durch threading zusätzlich
 
+Der Vergleich der Algorithmen bezieht sich rein auf das Ergebnis der Hintergrder Algorithmen bezieht sich rein auf das Ergebnis der Hintergrundentfernung.
+Im Bezug auf Performance ist der Histogramm-basierte Algorithmus wesentlich besser (ca. 3-4 Frames/sec vs. ca 20-25 Frames / sec).
+
+Größte Performance-Bremse lt. Callgrind: der .at(foo, bar): Zugriff auf einzelne Elemente des Arrays.
 
 \subsection{CvHMM}
 \label{sec:CvHMM}
@@ -12,6 +26,5 @@ Ein weiterer großer Nachteil von CvHMM ist, dass nur der Baum-Welch-, der Viter
 Zusammenfassend lässt sich zur Wahl der HMM Bibliothek sagen, dass es wohl das Ergebnis des Projekts erheblich hätte verbessern können, wenn unsere Wahl auf eine andere Bibliothek gefallen wäre.
 
 Mögliche Kandidaten zum Testen wären dabei HMMlib oder vielleicht sogar die, wie wir später herausgefunden haben, in OpenCV enthaltenen HMM-Funktionen, die allerdings innerhalb des OpenCV-Projekts nicht weiterentwickelt werden und derzeit des Status “deprecated” haben.
-
 
 
