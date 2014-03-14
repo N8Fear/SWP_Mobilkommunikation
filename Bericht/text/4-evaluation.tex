@@ -15,10 +15,18 @@ Die erwarteten Werte für diesen Vergleich sind uns seitens des SAFEST Projekts 
 \label{sec:eval_innenhof}
 \begin{figure}
 	\centering
-\includegraphics[width=1\textwidth]{bilder/safest_plot_tegel_7-55.pdf}
+\includegraphics[width=1\textwidth]{bilder/safest_plot_innenhof_910_nolearn.pdf}
 \caption{Innenhof: Histogramm vs. nicht lernendes HMM}
 	\label{fig:Innenhof_nl}
 \end{figure}
+\begin{figure}
+	\centering
+\includegraphics[width=1\textwidth]{bilder/safest_plot_innenhof_910_learn.pdf}
+\caption{Innenhof: Histogramm vs. nicht lernendes HMM}
+	\label{fig:Innenhof_nl}
+\end{figure}
+In beiden Grafiken sieht man, dass der Histogramm-basierte Algorithmus für dieses Video bessere Ergebnisse liefert, als der HMM-basierte Algorithmus.\\
+Allerdings ist der HMM-basierte Algorithmus mit Lernen besser als ohne Lernen.
 
 \subsection{Vergleich mit Histogramm-basierter Implementierung: Eingang}
 \label{sec:eval_eingang}
@@ -35,6 +43,7 @@ Die erwarteten Werte für diesen Vergleich sind uns seitens des SAFEST Projekts 
 	\label{fig:Eingang-learn}
 \end{figure}
 In der Grafik \ref{fig:Eingang-nolearn} kann man sehen, dass beide Algorithmen Probleme mit dem Videomaterial haben. Was auch auffällt ist, dass gerade in der zweiten, schlechteren Hälfte der HMM-basierte Algorithmus deutlich bessere Ergebnisse liefert, als der Histogrammbaiserte Algorithmus.\\
+In Grafik \ref{fig:Eingang-learn} ist zu sehen, dass der HMM-basierte Algorithmus anfangs eine höhere Varianz aufweist, aber in der zweiten Hälfte des Videos dichter an den korrekten Werten liegt.
 
 
 \subsection{Vergleich mit Histogramm-basierter Implementierung: Tegel}
