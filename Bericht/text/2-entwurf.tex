@@ -43,16 +43,16 @@ Formal definiert ist ein HMM ein 5er-Tupel $\lambda= (S, V, A, B, \Pi)$ mit:
 Ein HMM heißt zeitinvariant, wenn sich die Übergangs- und Emissionswahrscheinlichkeiten nicht mit der Zeit ändern.\\
 HMM werden zunehmend in der Literatur zur Sprach-, Schrift und Mustererkennung \cite{Gales:2007:AHM:1373536.1373537}\cite{Yang1995161} verwendet, da sie mit den probabilistischen Übergängen die Prozesse der echten Welt besser widerspiegeln als deterministische Definitionen, zu dem können die Parameter durch Lernalgorithmen automatisiert bestimmt werden.
  siehe hierzu Kapitel 2.5.
+Abbildung \ref{fig:hmm} zeigt ein HMM mit 3 Zuständen und 4 Emissionen, wobei der Übergang aus jedem Zustand zu jedem Zustand und zusätzlich in jedem Zustand jede Emission möglich ist.
+In diesem Beispiel liegt eine Gleichverteilung vor, Übergänge zwischen Zuständen haben stets die Wahrscheinlichkeit $1/3$, die Emissionen haben stets eine Wahrscheinlichkeit von $1/4$.
+Beschriftung der Kanten aus Übersichtsgründen nicht dargestellt.
+%TODO: Bedeutung von Beispiel/Grafik, wieso gleichverteilt, Quelle?
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=1\textwidth]{bilder/02_hmm.pdf}
 	\caption{Beispiel für ein HMM}
 	\label{fig:hmm}
 \end{figure}
-Abbildung \ref{fig:hmm} zeigt ein HMM mit 3 Zuständen und 4 Emissionen, wobei der Übergang aus jedem Zustand zu jedem Zustand und zusätzlich in jedem Zustand jede Emission möglich ist.
-In diesem Beispiel liegt eine Gleichverteilung vor, Übergänge zwischen Zuständen haben stets die Wahrscheinlichkeit $1/3$, die Emissionen haben stets eine Wahrscheinlichkeit von $1/4$.
-Beschriftung der Kanten aus Übersichtsgründen nicht dargestellt.
-%TODO: Bedeutung von Beispiel/Grafik, wieso gleichverteilt, Quelle?
 
 \subsection{Standartalgorithmen von HMMs}
 \label{sec:standartalgorithmenHMM}
