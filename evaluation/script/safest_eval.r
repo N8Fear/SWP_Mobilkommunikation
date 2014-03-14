@@ -37,13 +37,13 @@ duration = nrow(graph_data)
 pdf("safest_plot.pdf", width=12)
 
 # plot it
-plot(x=graph_data$Time, y=graph_data$PeopleT1, xlab="Seconds", ylab="Number of persons",
-     main="Distance to correct value by number of persons per seconds", 
+plot(x=graph_data$Time, y=graph_data$PeopleT1, xlab="Sekunden", ylab="Anzahl von Personen",
+     main="Abstand zum Sollwert in Personen im Verlauf der Zeit.", 
      type="b", col="red", ylim=c(y_min-2,y_max+2))
 lines(x=graph_data$Time, y=graph_data$PeopleT2, col="blue", type="b", pch=22)
 
 # add legend and grid for easy readability
-legend("topleft", c("Histogram","HMM"), cex=1.2, 
+legend("topleft", c("Histogramm","HMM"), cex=1.2, 
        col=c("red","blue"), pch=c(21,22), lty=c(1,1))
 abline(v=(seq(2, duration, by=10)), col="lightgray", lty="dotted")
 abline(h=(seq(y_min-2, y_max+2, 1)), col="lightgray", lty="dotted")
