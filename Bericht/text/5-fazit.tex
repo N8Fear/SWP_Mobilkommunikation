@@ -1,5 +1,11 @@
 \section{Fazit und Ausblick}
 \label{chap:fazit}
-
-todo blub wir sind cool
-
+Wir werten das Ergebnis unseres Projekts als Erfolg.\\
+Wir haben nachgewiesen, dass es möglich ist, einen auf HMM-basierenden Algorithmus zur Trennung von Vorder- und Hintergrund zu verwenden und damit zumindest ähnliche Ergebnisse zu erzielen, wie min den bereits implementierten Algorithmen.\\
+Gerade bei für die Trennung schwierigen Bilddaten, wie beispielsweise den \glqq Eingang\grqq Videos hat unsere Implementierung dabei klare Vorteile.\\
+Die in den Abschitten \ref{sec:diskuss} und \ref{sec:cvhmm} angesprochenen Nachteile können sehr wahrscheinlich auch noch weiter verbessert werden.\\
+Vorschläge für Verbesserungen wären zum einen die Verwendung einer besseren Bibliothek für HMMs sowie einige algorithmische Anpassungen.\\
+Mögliche Kandidaten für eine bessere HMM-Bibliothek wären dabei HMMlib oder vielleicht sogar die, wie wir später herausgefunden haben, in OpenCV enthaltenen HMM-Funktionen, die allerdings innerhalb des OpenCV-Projekts nicht weiterentwickelt werden und derzeit des Status “deprecated” haben.
+Gerade HMMlib ist sehr viel mehr auf Performance optimiert, setzt dafür aber auch stärkere Hardware vorraus (SSE3).\\
+Die Verwendung einer anderen HMM-Bibliothek würde auch die Chance eröffnen, statt den doch relativ aufwändigen Viterbi-Algorithmus zur Bestimmung des nächsten Zustands den Forward-Algorithmus zu verwenden. Dies würde vermutlich auch zu einer Performance Steigerung führen.\\
+Zusammenfassend kann man aber sagen, dass der Einsatz eines HMM-basierten Hintergrund-Extraktors sinnvoll erscheint, da er auch mit schwierigen Videos gut umgehen kann. Interessant wäre hier noch, ob es möglich ist, eine sinnvolle online-Lernfähigkeit zu integrieren, wenn die verwendeten Videosequenzen lang genug sind (was im Falle von realen Überwachungskameras ja kein Problem darstellen würde).
