@@ -15,57 +15,46 @@ Die erwarteten Werte für diesen Vergleich sind uns seitens des SAFEST Projekts 
 \label{sec:eval_innenhof}
 \begin{figure}
 	\centering
-\includegraphics[width=1\textwidth]{bilder/safest_plot_innenhof_910_nolearn.pdf}
-\caption{Innenhof: Histogramm vs. nicht lernendes HMM}
-	\label{fig:Innenhof_nl}
+\includegraphics[width=1\textwidth]{bilder/innenhof_910-1000_histo_vs_hmm_prelearned.pdf}
+\caption{Innenhof: Histogramm vs. trainiertes HMM}
+	\label{fig:Innenhof}
 \end{figure}
-\begin{figure}
-	\centering
-\includegraphics[width=1\textwidth]{bilder/safest_plot_innenhof_910_learn.pdf}
-\caption{Innenhof: Histogramm vs. nicht lernendes HMM}
-	\label{fig:Innenhof_nl}
-\end{figure}
-In beiden Grafiken sieht man, dass der Histogramm-basierte Algorithmus für dieses Video bessere Ergebnisse liefert, als der HMM-basierte Algorithmus.\\
-Allerdings ist der HMM-basierte Algorithmus mit Lernen besser als ohne Lernen.
-
-\subsection{Vergleich mit Histogramm-basierter Implementierung: Eingang}
-\label{sec:eval_eingang}
-\begin{figure}
-	\centering
-\includegraphics[width=1\textwidth]{bilder/safest_plot_eingang2_nolearn.pdf}
-	\caption{Eingang: Histogramm vs. nicht lernendes HMM}
-	\label{fig:Eingang-nolearn}
-\end{figure}
-\begin{figure}
-	\centering
-\includegraphics[width=1\textwidth]{bilder/safest_plot_eingang2_learn.pdf}
-	\caption{Eingang: Histogramm vs. nicht lernendes HMM}
-	\label{fig:Eingang-learn}
-\end{figure}
-In der Grafik \ref{fig:Eingang-nolearn} kann man sehen, dass beide Algorithmen Probleme mit dem Videomaterial haben. Was auch auffällt ist, dass gerade in der zweiten, schlechteren Hälfte der HMM-basierte Algorithmus deutlich bessere Ergebnisse liefert, als der Histogrammbasierte Algorithmus.\\
-In Grafik \ref{fig:Eingang-learn} ist zu sehen, dass der HMM-basierte Algorithmus anfangs eine höhere Varianz aufweist, aber in der zweiten Hälfte des Videos dichter an den korrekten Werten liegt.
-
+In Grafik \ref{fig:Innenhof} sieht man, dass der Histogramm-basierte Algorithmus für dieses Video bessere Ergebnisse liefert, als der HMM-basierte Algorithmus.\\
 
 \subsection{Vergleich mit Histogramm-basierter Implementierung: Tegel}
 \label{sec:eval:tegel}
 \begin{figure}
 	\centering
-\includegraphics[width=1\textwidth]{bilder/safest_plot_tegel_7-55_hmm_learn.pdf}
-	\caption{Tegel: Histogramm vs. lernendes HMM}
-	\label{fig:tegel_7-55_learn}
+\includegraphics[width=1\textwidth]{bilder/tegel_7-55_histo_vs_prelearned_hmm.pdf}
+	\caption{Tegel: Histogramm vs. trainiertes HMM}
+	\label{fig:tegel}
 \end{figure}
 
+Wie man Abbildung \ref{fig:tegel} entnehmen kann, sind die Ergebnisse beider Algorithen vom Verlauf her sehr ähnlich.
+Allerdings hat der HMM-basierte Algorithmus gegenüber dem Histogram-basierten kleine Vorteile.
+Zwischen 30 und 50 Sekunden hat er eine deutlich geringere Abweichung vom korrekten Wert.
+Dasselbe gilt für den Bereich zwischen ca. 65 und 80 Sekunden.\\
+Insgesamt kann man aber sagen, dass am überraschensten ist, wie ähnlich der Verlauf der beiden Graphen ist. Zum Teil ist dies sicher darauf zurückzuführen, dass der Clustering-Algorithmus in beiden Fällen nicht richtig gut funktioniert.
+
+\subsection{Vergleich mit Histogramm-basierter Implementierung: Eingang}
+\label{sec:eval_eingang}
 \begin{figure}
 	\centering
-\includegraphics[width=1\textwidth]{bilder/safest_plot_tegel_7-55_hmm_nolearn.pdf}
-	\caption{Tegel: Histogramm vs. HMM mit generischen Startwerten}
-	\label{fig:tegel_7-55_nolearn}
+\includegraphics[width=1\textwidth]{bilder/eingang2_histo_vs_hmm_prelearned.pdf}
+\caption{Eingang: Histogramm vs. trainiertes HMM (gesamt)}
+	\label{fig:Eingang-gesamt}
 \end{figure}
-Wie man Abbildung \ref{fig:tegel_7-55_learn} entnehmen kann, sind die Ergebnisse beider Algorithen vom Verlauf her sehr ähnlich. Im Großen und Ganzen kann man den Histogramm-basierten Algorithmus dem von uns entwickten HMM-basierten Algorithmus gegenüber im Falle dieses Videos als überlegen betrachten.
-Allerdings haben beide Algorithmen relativ starke Abweichungen gegenüber den eigentlich gezählten Werten (HMM maximal 10, Histogramm maximal 9).
-Es fällt weiterhin auf, dass der HMM-basierte Algorithmus zwischenzeitlich immer wieder bessere Ergebnisse liefert (z.B. bei ca. 40-50 Sekunden und bei ca. 70-80 Sekunden).
-Dies liegt vermutlich daran, dass die HMMs zu diesem Zeitpunkt gerade eine Lernphase abgeschlossen haben, deren Ergebnis für eine gewisse Zeit andauert, so dass das HMM die Wirklichkeit in diesen Momenten besser beschreibt.\\
-Eine weitere Auffälligkeit ist, dass das für dieses Video ein nicht lernendes HMM mit generischen Werten bessere Ergebnisse liefert, als das lernende HMM und das Histogramm-basierte (vergleiche Grafik \ref{fig:tegel_7-55_nolearn}.
+\begin{figure}
+	\centering
+	\includegraphics[width=1\textwidth]{bilder/safest_plot_histo_vs_prelearned_652-end.pdf}
+	\caption{Eingang: Histogramm vs. trainiertes HMM, Auschnitt Frame 651-Ende}
+	\label{fig:Eingang-teil}
+\end{figure}
+In der Grafik \ref{fig:Eingang-gesamt} sieht man, dass beide Algorithmen hier nicht wirklich gut funktioieren.
+Dies ist aufgrund der Eigenschaften des Videos zu erwarten: der Hintergrund ist sehr hell und die Kalibrierung der Kamera fällt hier auch optisch sehr stark auf.\\
+Während in der ersten Hälfte des Videos der Histogramm-basierte Algorithmus noch Vorteile hat (relativ viele korrekte Anzeigen, der HMM-basierte Algorithmus erkennt meist eine Person zu viel). ist der HMM-basierte Algorithmus in der zweiten Hälfte des Videos (ab etwa Frame 450) deutlich besser.
+in Grafik \ref{fig:Eingang-teil} sieht, gibt es wesentlich weniger Ausreißer und das Ergebnis ist insgesamt auch viel dichter am korrekten Wert.\\
+Wie auch im Falle der Tegelvideos liegt der Fehler aber auch hier daran, dass der Clustering Algorithmus häufig einen Menschen in mehrere Cluster teilt, weil er nicht gut genug an das Video angepasst ist. Wenn man den Clustering-Algorithmus entsprechend anpassen würde, so dass eine Mensch nicht mehr in 2-4 Cluster geteilt wird, würde der HMM-basierte Algorithmus in der zweiten Hälfte des Bildes vermutlich sehr dicht am korrekten Wert liegen.
 
 \subsection{Diskussion}
 \label{sec:diskuss}
