@@ -4,10 +4,10 @@ In der letzten Phase unseres Projekts wurde uns ein Framework des SAFEST-Projekt
 
 Nach der Integration unseres Algorithmus in das Framework wird eine vergleichende Analyse mit der vorimplementierten, Histogramm-basierten Lösung durchgeführt. Als Metrik verwenden wir hierbei den Abstand zur tatsächlichen Anzahl von Personen im Bild. Die erwarteten Werte für diesen Vergleich sind uns seitens des SAFEST Projekts zur Verfügung gestellt worden und wurden manuell ermittelt. Das Ergebnis haben wir visualisiert, indem wir jeweils die Abweichung vom eigentlich erwarteten Wert als Graph dargestellt haben. Ein optimal funktionierender Algorithmus würde demnach als Graph im Diagramm ohne Abweichungen die Nulllinie verdecken. Es werden drei Videos von unterschiedlichen Umgebungen untersucht.\\
 Im Folgenden werden die zwei Algorithmen wie folgt benannt:
-\begin{itemize}
+\begin{description}
 	\item[Histogramm)] die bereits implementierte Lösung, die mit Histogrammen arbeitet
 	\item[HMM)] unsere HMM-basierte Lösung, wobei zunächst mit einem Video gelernt wird und dann die Analyse auf einem zweitem Video der selben Szenerie statt findet
-\end{itemize}
+\end{description}
 Weitere Vergleiche haben wir nicht angestellt, da das Histogramm-basierte Verfahren den anderen Verfahren entweder überlegen ist (OpenCV MOG und OpenCV MOG2) oder aber das Verfahren den Hintergrund hart auf bestimmte Videos kodiert (MEAN) und sehr unflexibel ist, sobald der Hintergrund nicht mehr uniform ist.
 
 \subsection{Vergleich mit Histogramm-basierter Implementierung: Innenhof}
@@ -68,4 +68,4 @@ Leider hat sich im Laufe des Projekts gezeigt, dass CvHMM sehr ineffizient auf e
 
 Zusätzlich sei angemerkt, dass außer im Falle der Grafik \ref{fig:Innenhof} (Innenhof) die Verläufe beider Graphen sehr ähnlich sind. Dies legt nahe, dass die vorliegenden Fehler eine gemeinsame Ursache besitzen. Diese Ursache konnte von uns teilweise lokalisiert werden: das Clustering, welches markierten Vordergrund in die Anzahl von Personen übersetzt, ist oft zu großzügig. Wir konnten beobachten, dass bei den Tegel- und Eingang-Videos einzelne Personen in zwei oder mehr Cluster (Personen) geteilt werden.
 
-Unseren Ergebnissen nach bewerten wir unser Algorithmus als einen allgemein einsatzfähigen Algorithmus, der in allen Szenerien gut genug ist (ein \glqq allrounder \grqq{}) der gegenüber dem spezialisierten Histogramm-basierten Ansatz in manchen Szenerien besser, in manchen schlechter abschneidet, aber stets gut genug ist.
+Unseren Ergebnissen nach bewerten wir unser Algorithmus als einen allgemein einsatzfähigen Algorithmus, der in allen Szenerien gut genug ist (ein \glqq allrounder\grqq{}) der gegenüber dem spezialisierten Histogramm-basierten Ansatz in manchen Szenerien besser, in manchen schlechter abschneidet, aber stets gut genug ist.

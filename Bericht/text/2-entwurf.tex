@@ -71,7 +71,7 @@ Gegeben sei eine Chronik an k-letzten Emissionen, was ist die Wahrscheinlichkeit
 Der Forward-Algorithmus ist ein Algorithmus aus der dynamischen Programmierung und optimiert im Gegensatz zum Viterbi nicht rückwirkend die gesamte Zustandssequenz neu, sondern berechnet den aktuell wahrscheinlichsten Zustand auf Basis der zuvor berechneten Zustände und hängt diesen an.
 Somit ist der Forward Algorithmus zur Laufzeit grundsätzlich schneller, jedoch nicht so genau wie der Viterbi-Algorithmus.
 
-Anhand des gewonnen letzten Zustandes kann nun bestimmt werden, welche Emission als nächstes vorhergesagt wird. Hierbei wird aus den möglichen Emissionen des letzten Zustandes deterministisch die wahrscheinlichste Emission gewählt oder aber gemäß der Wahrscheinlichkeiten gewichtetet gewürfelt werden. Die zweite Variante aufgrund ihrer probabilistischen Natur ist stärker an den HMM orientiert und sollte daher vorgezogen werden.
+Anhand des gewonnen letzten Zustandes kann nun bestimmt werden, welche Emission als nächstes vorhergesagt wird. Hierbei wird aus den möglichen Emissionen des letzten Zustandes deterministisch die wahrscheinlichste Emission gewählt oder aber gemäß der Wahrscheinlichkeiten gewichtetet gewürfelt. Die zweite Variante ist aufgrund ihrer probabilistischen Natur stärker an den HMM orientiert und sollte daher vorgezogen werden.
  \end{enumerate}
 
 
@@ -127,7 +127,7 @@ Bei dem aus verschiedenen Grauwerten bestehenden Bereich ist eine einfache Zuord
 
 Histogramm-basierte Analysen der DC-Werte über mehrere unterschiedliche Videosequenzen über alle Pixelblöcke genormt bestätigen diese Annahme und manifestieren drei Cluster, die wir vereinfacht Cluster schwarz, Cluster grau und Cluster weiß nennen - der Darstellungsfarbe des Wärmespektrums entsprechend.
 Die Grenzen dieser Cluster sind abhängig von jedem Video und dem betrachteten Umfeld, denn insbesondere die Kälte (und damit die Farbe) des Hintergrundes kann sich bei den jeweiligen Videos stark unterscheiden.\\
-Wir bilden auf Basis dieser Erkenntnis die ersten 3 Symbole, wobei, wenn der DC-Wert eines Blockes in das Intervall eines Clusters fällt, wir die entsprechende Beobachtung erstellen:
+Wir bilden auf Basis dieser Erkenntnis die ersten drei Beobachtungen, wobei, wenn der DC-Wert eines Blockes in das Intervall eines Clusters fällt, wir die entsprechende Beobachtung erstellen:
 \begin{itemize}
 	\item DC-Wert im Intervall Cluster schwarz $\rightarrow$ Beobachtung: DC\_BLACK
 	\item DC-Wert im Intervall Cluster grau$\rightarrow$ Beobachtung: DC\_GREY
@@ -197,7 +197,7 @@ Symbol 6&DC\_WHITE&AC\_HIGH\\
 \subsection{Verfahren zur Vordergrundextraktion}
 \label{sec:verfahren}
 
-Unser Verfahren zur Vordergrund-Extraktion basiert auf den zuvor genannten  Algorithmen, der Bildpartitionierung in Blöcke und dem eingeführten Eingabealphabet.
+Unser Verfahren zur Vordergrundextraktion basiert auf den zuvor genannten  Algorithmen, der Bildpartitionierung in Blöcke und dem eingeführten Eingabealphabet.
 Jeder Block wird durch ein eigenes, individuelles HMM modelliert, da Blöcke unterschiedliche Übergangs-/Emissionswahrscheinlichkeiten aufgrund ihrer Lokalität aufweisen: ein Block an einer Tür ist öfter Veränderungen ausgesetzt, da erwartungsgemäß häufiger Personen durch diesen Bereich laufen, als ein Block in einem weniger frequentierten Bereich der eher dazu neigt kühl und dunkel zu sein.\\
 In der ersten Phase ist ein Trainingsvideo zu verwenden, welches dazu dient, (individuelle) Trainingssequenzen für die Blöcke zu erstellen und im Folgenden diese dem Baum-Welch-Algorithmus zu übergeben, welcher die HMMs blocklokal trainiert.
 Da in einem Block hauptsächlich der Hintergrund zu beobachten ist, wird jeder Block nach der Lernphase seinen eigenen Hintergrund lernen und somit die korrespondierenden Emissionen als wahrscheinlicher bewerten.\\
