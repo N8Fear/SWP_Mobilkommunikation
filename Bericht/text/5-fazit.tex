@@ -1,11 +1,19 @@
 \section{Fazit und Ausblick}
 \label{chap:fazit}
-Wir werten das Ergebnis unseres Projekts als Erfolg.\\
-Wir haben nachgewiesen, dass es möglich ist, einen auf HMM-basierenden Algorithmus zur Trennung von Vorder- und Hintergrund zu verwenden und damit zumindest ähnliche Ergebnisse zu erzielen, wie min den bereits implementierten Algorithmen.\\
-Gerade bei für die Trennung schwierigen Bilddaten, wie beispielsweise den \glqq Eingang\grqq Videos hat unsere Implementierung dabei klare Vorteile.\\
-Die in den Abschitten \ref{sec:diskuss} und \ref{sec:cvhmm} angesprochenen Nachteile können sehr wahrscheinlich auch noch weiter verbessert werden.\\
-Vorschläge für Verbesserungen wären zum einen die Verwendung einer besseren Bibliothek für HMMs sowie einige algorithmische Anpassungen.\\
-Mögliche Kandidaten für eine bessere HMM-Bibliothek wären dabei HMMlib oder vielleicht sogar die, wie wir später herausgefunden haben, in OpenCV enthaltenen HMM-Funktionen, die allerdings innerhalb des OpenCV-Projekts nicht weiterentwickelt werden und derzeit des Status “deprecated” haben.
-Gerade HMMlib ist sehr viel mehr auf Performance optimiert, setzt dafür aber auch stärkere Hardware vorraus (SSE3).\\
-Die Verwendung einer anderen HMM-Bibliothek würde auch die Chance eröffnen, statt den doch relativ aufwändigen Viterbi-Algorithmus zur Bestimmung des nächsten Zustands den Forward-Algorithmus zu verwenden. Dies würde vermutlich auch zu einer Performance Steigerung führen.\\
-Zusammenfassend kann man aber sagen, dass der Einsatz eines HMM-basierten Hintergrund-Extraktors sinnvoll erscheint, da er auch mit schwierigen Videos gut umgehen kann. Interessant wäre hier noch, ob es möglich ist, eine sinnvolle online-Lernfähigkeit zu integrieren, wenn die verwendeten Videosequenzen lang genug sind (was im Falle von realen Überwachungskameras ja kein Problem darstellen würde).
+
+% ausblick
+Wir sehen unsere Ziele der Anforderungsanalyse aus Kapitel \ref{sec:anforderungsanalyse} als erfüllt. Die in dem Abschnitt \ref{sec:diskuss} angesprochenen Nachteile können sehr wahrscheinlich überwunden werden, wobei die Verwendung einer besseren Bibliothek für HMMs die erste wichtige Anpassung sein sollte. Ein möglicher Kandidat für eine bessere HMM-Bibliothek wäre dabei HMMlib, welches deutlich auf Performance hin optimiert wurde und des Weiteren den Forward-Algorithmus anbietet. Je nach eingesetzter Hardware kann auch Threading verwendet werden, um durch eine Einteilung des Bildframes in Bereiche und nichtsequentielle Berechnung die Abarbeitung zu beschleunigen. Zudem sollten algorithmische Anpassungen und theoretische Untersuchungen überprüfen, wie groß der Einfluss einer anderen HMM-Topologie wäre.
+
+
+%Fazit
+Wir werten das Ergebnis unseres Projekts als Erfolg. Wir haben nachgewiesen, dass es möglich ist, einen auf HMM-basierenden Algorithmus zur Trennung von Vorder- und Hintergrund zu verwenden und haben mit diesen ähnlich gute Ergebnisse erzielt, wie mit den bereits implementierten Algorithmen. Bei heterogenen Hintergründen besitzt unser Konzept klare Vorteile gegenüber den Histogramm-basierten Algorithmus. Zusammenfassend erscheint der Einsatz eines HMM-basierten Hintergrund-Extraktors als sinnvoll.
+
+%  [habe ich zunächst ausgelassen, da ghosting imho problem von zu hochfrequenten lernens war, nicht von zu kurzen videos]
+
+% Interessant wäre zudem, ob es möglich ist, eine sinnvolle online-Lernfähigkeit zu integrieren, wenn die verwendeten Videosequenzen lang genug sind (was im Falle von realen Überwachungskameras ja kein Problem darstellen würde).
+%Allerdings haben wir nur \glqq Offline-Learning\grqq{} genutzt, da die uns zur Verfügung gestellten Sequenzen für \glqq Online-Learning\grqq{} zu kurz waren. Wenn wir versucht haben, online zu lernen, führte dies immer zu schlechteren Ergebnissen aufgrund von Geisterbildern.\\
+
+%[ausgleassen da dperciated und die die super starke hardware erstmal egal ist...]
+
+ %oder vielleicht sogar die, wie wir später herausgefunden haben, in OpenCV enthaltenen HMM-Funktionen, die allerdings innerhalb des OpenCV-Projekts nicht weiterentwickelt werden und derzeit des Status “deprecated” haben. %Gerade HMMlib ist sehr viel mehr auf Performance optimiert, setzt dafür aber auch stärkere Hardware vorraus (SSE3). 
+
