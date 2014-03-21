@@ -25,13 +25,13 @@ Die Implementierung sowohl unseres Testbeds als auch die finale Implementierung 
 
 \subsection{OpenCV}
 \label{sec:opencv}
-OpenCV ist eine Bibliothek die eine Vielzahl unterschiedlicher Algorithmen für die Bildbearbeitung und somit letztlich für die Videobearbeitung zur Verfügung stellt.
+OpenCV\cite{opencv} ist eine Bibliothek die eine Vielzahl unterschiedlicher Algorithmen für die Bildbearbeitung und somit letztlich für die Videobearbeitung zur Verfügung stellt.
  Hinzu kommt, dass auch Funktionen für das Lesen, Schreiben und Abspielen von Videodateien verschiedener Datentypen sowie von Kamera angeboten werden. Videos und Bilder werden in das OpenCV spezifische Format Mat eingelesen, auf dem viele Operationen möglich sind.  Die von uns vorgestellte DCT ist Teil dieser Bibliothek und konnte von uns direkt auf den Mat-Objekten angewandt werden.\\
 OpenCV bietet Interfaces für C, Python, Java und C++ und lässt sich auf vielen unterschiedlichen Plattformen einsetzen.
 
 
 \subsection{CvHMM}
 \label{sec:cvhmm}
-Aus der Menge der vorhandenen C++-HMM Bibliotheken fiel unsere Wahl auf CvHMM\cite{cvhmmLINK}, vor allem da diese Bibliothek direkt auf dem in OpenCV enthaltenen Standard-Videodatentyp Mat operiert und daher die Vermutung nahe liegt, dass weniger Performanceeinbußen vorliegen, da keine Konvertierung von Daten in andere Formate erfolgen muss.\\
+Aus der Menge der vorhandenen C++-HMM Bibliotheken fiel unsere Wahl auf CvHMM\cite{cvhmmLINK}, vor allem da diese Bibliothek direkt auf dem in OpenCV\cite{opencv} enthaltenen Standard-Videodatentyp Mat operiert und daher die Vermutung nahe liegt, dass weniger Performanceeinbußen vorliegen, da keine Konvertierung von Daten in andere Formate erfolgen muss.\\
 
 
